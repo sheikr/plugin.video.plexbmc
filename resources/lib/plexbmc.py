@@ -315,6 +315,112 @@ def addGUIItem(url, details, extraData, context=None, folder=True, request=None)
         else:    
             return xbmcplugin.addDirectoryItem(handle=pluginhandle,url=u,listitem=liz,isFolder=folder)
 
+def add_item_to_gui(request, details, extraData, context=None, folder=True, ):
+
+    item_title = details.get('title', 'Unknown')
+
+    printDebug.debug("== ENTER ==")
+    printDebug.debug("Adding Dir for [%s]" % item_title)
+    printDebug.debug("Passed details: %s" % details)
+    printDebug.debug("Passed extraData: %s" % extraData)
+
+    printDebug.debug("URL to use in JSON: %s" % request['request']['url'])
+        
+    thumb = str(extraData.get('thumb', ''))
+
+    liz=xbmcgui.ListItem(item_title, thumbnailImage=thumb)
+
+    printDebug.debug("Setting thumbnail as %s" % thumb)
+
+    #Set the properties of the item, such as summary, name, season, etc
+    liz.setInfo(type=extraData.get('type','Video'), infoLabels=details )
+
+    #Music related tags
+    if extraData.get('type','').lower() == "music":
+        liz.setProperty('Artist_Genre', details.get('genre',''))
+        liz.setProperty('Artist_Description', extraData.get('plot',''))
+        liz.setProperty('Album_Description', extraData.get('plot',''))
+
+    if extraData.get('type','').lower() == "video":
+        liz.setInfo( type="Video", infoLabels={ "DateAdded": extraData.get('dateadded','')})
+
+    #For all end items    
+    if ( not folder):
+        liz.setProperty('IsPlayable', 'true')
+
+        if extraData.get('type','video').lower() == "video":
+            liz.setProperty('TotalTime', str(extraData.get('duration')))
+            liz.setProperty('ResumeTime', str(extraData.get('resume')))
+
+            if not settings.skipmediaflags:
+                printDebug.debug("Setting VrR as : %s" % extraData.get('VideoResolution',''))
+                liz.setProperty('VideoResolution', extraData.get('VideoResolution',''))
+                liz.setProperty('VideoCodec', extraData.get('VideoCodec',''))
+                liz.setProperty('AudioCodec', extraData.get('AudioCodec',''))
+                liz.setProperty('AudioChannels', extraData.get('AudioChannels',''))
+                liz.setProperty('VideoAspect', extraData.get('VideoAspect',''))
+
+                video_codec={}
+                if extraData.get('xbmc_VideoCodec'): video_codec['codec'] = extraData.get('xbmc_VideoCodec')
+                if extraData.get('xbmc_VideoAspect') : video_codec['aspect'] = float(extraData.get('xbmc_VideoAspect'))
+                if extraData.get('xbmc_height') : video_codec['height'] = int(extraData.get('xbmc_height'))
+                if extraData.get('xbmc_width') : video_codec['width'] = int(extraData.get('xbmc_width'))
+                if extraData.get('duration') : video_codec['duration'] = int(extraData.get('duration'))
+
+                audio_codec={}
+                if extraData.get('xbmc_AudioCodec') : audio_codec['codec'] = extraData.get('xbmc_AudioCodec')
+                if extraData.get('xbmc_AudioChannels') : audio_codec['channels'] = int(extraData.get('xbmc_AudioChannels'))
+
+                liz.addStreamInfo('video', video_codec )
+                liz.addStreamInfo('audio', audio_codec )
+            
+    try:
+        #Then set the number of watched and unwatched, which will be displayed per season
+        liz.setProperty('TotalEpisodes', str(extraData['TotalEpisodes']))
+        liz.setProperty('WatchedEpisodes', str(extraData['WatchedEpisodes']))
+        liz.setProperty('UnWatchedEpisodes', str(extraData['UnWatchedEpisodes']))
+        
+        #Hack to show partial flag for TV shows and seasons
+        if extraData.get('partialTV') == 1:            
+            liz.setProperty('TotalTime', '100')
+            liz.setProperty('ResumeTime', '50')
+            
+    except: pass
+
+    #Set the fanart image if it has been enabled
+    fanart = str(extraData.get('fanart_image', 'None'))
+
+    if fanart != 'None':
+        liz.setProperty('fanart_image', fanart)
+
+        printDebug.debug("Setting fan art as %s" % fanart)
+
+    if extraData.get('banner'):
+        bannerImg = str(extraData.get('banner', ''))
+
+        liz.setProperty('banner', bannerImg)
+        printDebug.debug("Setting banner as %s" % bannerImg)
+
+    if extraData.get('season_thumb'):
+        seasonImg = str(extraData.get('season_thumb', ''))
+
+        liz.setProperty('seasonThumb', seasonImg)
+        printDebug.debug("Setting season Thumb as %s" % seasonImg)
+
+    if context is not None:
+        printDebug.debug("Building Context Menus")
+
+        #if (not folder) and extraData.get('type','video').lower() == "video":
+            #Play Transcoded
+            #transcode_json=request
+            #context.insert(0,('Play Transcoded', "XBMC.PlayMedia(%s?%s)" % (sys.argv[0], urllib.quote(json.dumps(enable_json_transcode(transcode_json)))) ))
+            #printDebug.debug("Setting transcode options to [%s]" % sys.argv[0]+'?'+urllib.quote(json.dumps(enable_json_transcode(transcode_json))))
+
+        liz.addContextMenuItems( context, settings.contextReplace )
+
+    return xbmcplugin.addDirectoryItem(handle=pluginhandle,url=sys.argv[0]+'?'+json.dumps(request),listitem=liz,isFolder=folder)
+
+            
 def displaySections( filter=None, display_shared=False ):
         printDebug.debug("== ENTER ==")
         xbmcplugin.setContent(pluginhandle, 'files')
@@ -2238,14 +2344,9 @@ def movieTag(section_number, server, tree, movie, randomNumber):
         context=buildContextMenu(section_number, extraData, server)
     else:
         context=None
-    # http:// <server> <path> &mode=<mode> &t=<rnd>
-    extraData['mode']=_MODE_PLAYLIBRARY
-    separator = "?"
-    if "?" in extraData['key']:
-        separator = "&"
-    u="%s%s%st=%s" % (server.get_url_location(), extraData['key'], separator, randomNumber)
-    request_json=create_json_parameters(mode=extraData['mode'], url=extraData['key'], server=GLOBAL_SERVER.get_uuid())
-    addGUIItem(u,details,extraData,context,folder=False, request=request_json)
+
+    request_json=create_json_parameters(mode=_MODE_PLAYLIBRARY, url=extraData['key'], server=server.get_uuid())
+    add_item_to_gui(request_json, details,extraData,context,folder=False)
     return
     
 def getMediaData ( tag_dict ):
@@ -4260,6 +4361,7 @@ def start_plexbmc():
         json_parameters=process_json_parameters(sys.argv[2])
     except:
         json_parameters=None
+        
     if json_parameters is not None:
         #mode=json_parameters['mode']
         param_url = json_parameters['request']['url']
@@ -4277,24 +4379,23 @@ def start_plexbmc():
         GLOBAL_SERVER=plex_network.get_server_from_uuid(json_parameters['request']['server'])
         
     else:
-        try:
-            printDebug.info("Processing using url params")
-            params=get_params(sys.argv[2])
-        except:
-            params={}
-        json_parameters=create_json_parameters(command=sys.argv[1],mode=int(params.get('mode',-1)))
+        printDebug.info("Old style params detected - parsing and creating json")
+        json_parameters=create_json_parameters(command=sys.argv[1])
         #Now try and assign some data to them
-        param_url=params.get('url',None)
+        #param_url=params.get('url',None)
+        #if param_url is not None:
+        #    global GLOBAL_SERVER
+        #    GLOBAL_SERVER=plex_network.get_server_from_url(param_url)
 
-        if param_url and ( param_url.startswith('http') or param_url.startswith('file') ):
-                param_url = urllib.unquote(param_url)
+        #if param_url and ( param_url.startswith('http') or param_url.startswith('file') ):
+        #        param_url = urllib.unquote(param_url)
 
-        param_name=urllib.unquote_plus(params.get('name',""))
+        #param_name=urllib.unquote_plus(params.get('name',""))
         #mode=int(params.get('mode',-1))
-        param_transcodeOverride=int(params.get('transcode',0))
-        param_identifier=params.get('identifier',None)
-        param_indirect=params.get('indirect',None)
-        force=params.get('force')
+        #param_transcodeOverride=int(params.get('transcode',0))
+        #param_identifier=params.get('identifier',None)
+        #param_indirect=params.get('indirect',None)
+        #force=params.get('force')
 
          
         
@@ -4389,9 +4490,9 @@ def start_plexbmc():
 
         if settings.debug >= printDebug.DEBUG_INFO:
             print "PleXBMC -> Mode: %s " % json_parameters['mode']
-            print "PleXBMC -> URL: %s" % param_url
-            print "PleXBMC -> Name: %s" % param_name
-            print "PleXBMC -> identifier: %s" % param_identifier
+            print "PleXBMC -> URL: %s" % json_parameters['request']['url']
+            print "PleXBMC -> Name: %s" % json_parameters['request']['name']
+            print "PleXBMC -> identifier: %s" % json_parameters['request']['identifier']
 
         #Run a function based on the mode variable that was passed in the URL
         if ( json_parameters['mode'] == None ) or ( param_url == None ) or ( len(param_url)<1 ):
@@ -4407,64 +4508,64 @@ def start_plexbmc():
             Movies(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_ARTISTS:
-            artist(param_url)
+            artist(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_TVSEASONS:
             TVSeasons(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_PLAYLIBRARY:
-            playLibraryMedia(param_url,force=force, override=param_transcodeOverride)
+            playLibraryMedia(json_parameters['request']['url'],force=json_parameters['request']['force'], override=param_transcodeOverride)
 
         elif json_parameters['mode'] == _MODE_PLAYSHELF:
-            playLibraryMedia(param_url,full_data=True, shelf=True)
+            playLibraryMedia(json_parameters['request']['url'],full_data=True, shelf=True)
 
         elif json_parameters['mode'] == _MODE_TVEPISODES:
-            TVEpisodes(param_url)
+            TVEpisodes(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_PLEXPLUGINS:
-            PlexPlugins(param_url)
+            PlexPlugins(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_PROCESSXML:
-            processXML(param_url)
+            processXML(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_BASICPLAY:
-            PLAY(param_url)
+            PLAY(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_ALBUMS:
-            albums(param_url)
+            albums(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_TRACKS:
-            tracks(param_url)
+            tracks(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_PHOTOS:
-            photo(param_url)
+            photo(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_MUSIC:
-            music(param_url)
+            music(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_VIDEOPLUGINPLAY:
-            videoPluginPlay(param_url,param_identifier,param_indirect)
+            videoPluginPlay(json_parameters['request']['url'],json_parameters['request']['identifier'],json_parameters['request']['indirect'])
 
         elif json_parameters['mode'] == _MODE_PLEXONLINE:
-            plexOnline(param_url)
+            plexOnline(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_CHANNELINSTALL:
-            install(param_url,param_name)
+            install(json_parameters['request']['url'],json_parameters['request']['name'])
 
         elif json_parameters['mode'] == _MODE_CHANNELVIEW:
-            channelView(param_url)
+            channelView(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_PLAYLIBRARY_TRANSCODE:
-            playLibraryMedia(param_url,override=True)
+            playLibraryMedia(json_parameters['request']['url'],override=True)
 
         elif json_parameters['mode'] == _MODE_MYPLEXQUEUE:
             myPlexQueue()
 
         elif json_parameters['mode'] == _MODE_CHANNELSEARCH:
-            channelSearch( param_url, params.get('prompt') )
+            channelSearch( json_parameters['request']['url'], params.get('prompt') )
 
         elif json_parameters['mode'] == _MODE_CHANNELPREFS:
-            channelSettings ( param_url, params.get('id') )
+            channelSettings ( json_parameters['request']['url'], params.get('id') )
 
         elif json_parameters['mode'] == _MODE_SHARED_MOVIES:
             displaySections(filter="movies", display_shared=True)
@@ -4486,4 +4587,4 @@ def start_plexbmc():
             xbmc.executebuiltin("Container.Refresh")
 
         elif json_parameters['mode'] == _MODE_PLAYLISTS:
-            processXML(param_url)
+            processXML(json_parameters['request']['url'])
