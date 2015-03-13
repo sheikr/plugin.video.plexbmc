@@ -191,25 +191,30 @@ def addGUIItem(url, details, extraData, context=None, folder=True, request=None)
         printDebug.debug("Passed details: %s" % details)
         printDebug.debug("Passed extraData: %s" % extraData)
 
-        if extraData.get('mode',None) is None:
-            mode="&mode=0"
-        else:
-            mode="&mode=%s" % extraData['mode']
+        if request is None:
+        
+            if extraData.get('mode',None) is None:
+                mode="&mode=0"
+            else:
+                mode="&mode=%s" % extraData['mode']
 
-        #Create the URL to pass to the item
-        if ( not folder) and ( extraData['type'] == "image" ):
-             u=url
-        elif url.startswith('http') or url.startswith('file'):
-            u=sys.argv[0]+"?url="+urllib.quote(url)+mode
+            #Create the URL to pass to the item
+            if ( not folder) and ( extraData['type'] == "image" ):
+                 u=url
+            elif url.startswith('http') or url.startswith('file'):
+                u=sys.argv[0]+"?url="+urllib.quote(url)+mode
+            else:
+                u=sys.argv[0]+"?url="+str(url)+mode
+                
+            if extraData.get('parameters'):
+                for argument, value in extraData.get('parameters').items():
+                    u = "%s&%s=%s" % (u, argument, urllib.quote(value))
+
+            printDebug.debug("URL to use for listing: %s" % u)
+        
         else:
-            u=sys.argv[0]+"?url="+str(url)+mode
+            printDebug.debug("URL to use in JSON: %s" % request['request']['url'])
             
-        if extraData.get('parameters'):
-            for argument, value in extraData.get('parameters').items():
-                u = "%s&%s=%s" % (u, argument, urllib.quote(value))
-
-        printDebug.debug("URL to use for listing: %s" % u)
-
         thumb = str(extraData.get('thumb', ''))
 
         liz=xbmcgui.ListItem(item_title, thumbnailImage=thumb)
@@ -1704,14 +1709,11 @@ def processDirectory( url, tree=None ):
         extraData={'thumb'        : getThumb(tree, server) ,
                    'fanart_image' : getFanart(tree, server) }
 
-        #if extraData['thumb'] == '':
-        #    extraData['thumb']=extraData['fanart_image']
-
         extraData['mode'] = _MODE_GETCONTENT
-        u='%s' % (getLinkURL(url, directory, server))
+        u=get_link_from_xml(url,directory)
 
-        request_json=create_json_parameters(url=extraData['key'], mode=extraData['mode'], server=server.get_uuid()) 
-        addGUIItem(u, details, extraData)
+        request_json=create_json_parameters(url=u, mode=extraData['mode'], server=server.get_uuid()) 
+        addGUIItem(u, details, extraData, request=request_json)
 
     xbmcplugin.endOfDirectory(pluginhandle, cacheToDisc=True)
 
@@ -2543,6 +2545,52 @@ def getServerFromURL( url ):
     else:
         return url.split('/')[0]
 
+def get_link_from_xml(url, pathData, season_shelf=False):
+    '''
+        Investigate the passed URL and determine what is required to
+        turn it into a usable URL
+        @ input: url, XML data and PM server address
+        @ return: Usable http URL
+    '''
+    printDebug.debug("== ENTER ==")
+    if not season_shelf:
+        path = pathData.get('key', '')
+    else:
+        path = pathData.get('parentKey', '') + "/children"
+        
+    printDebug.debug("Path is %s" % path)
+
+    if path == '':
+        printDebug.debug("Empty Path")
+        return
+
+    #If key starts with http, then return it
+    if path.startswith('http') or path.startswith('/') or path.startswith("rtmp"):
+        printDebug.debug("Detected http, absolute or rtmp link")
+        return path
+
+    #If key starts with plex:// then it requires transcoding
+    elif path.startswith("plex:") :
+        printDebug.debug("Detected plex link")
+        components = path.split('&')
+        for i in components:
+            if 'prefix=' in i:
+                del components[components.index(i)]
+                break
+        if pathData.get('identifier',None):
+            components.append('identifier='+pathData['identifier'])
+
+        path='&'.join(components)
+        return 'plex://'+server.get_location()+'/'+'/'.join(path.split('/')[3:])
+
+    #Any thing else is assumed to be a relative path and is built on existing url
+    else:
+        printDebug.debug("Detected relative link")
+        return "%s/%s" % (url, path)
+
+    return url
+        
+        
 def getLinkURL(url, pathData, server, season_shelf=False):
     '''
         Investigate the passed URL and determine what is required to
