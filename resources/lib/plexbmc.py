@@ -304,8 +304,9 @@ def addGUIItem(url, details, extraData, context=None, folder=True, request=None)
 
             if (not folder) and extraData.get('type','video').lower() == "video":
                 #Play Transcoded
-                context.insert(0,('Play Transcoded', "XBMC.PlayMedia(%s?%s)" % (sys.argv[0], urllib.quote(json.dumps(enable_json_transcode(request)))) ))
-                printDebug.debug("Setting transcode options to [%s]" % sys.argv[0]+'?'+urllib.quote(json.dumps(enable_json_transcode(request))))
+                #transcode_json=request
+                #context.insert(0,('Play Transcoded', "XBMC.PlayMedia(%s?%s)" % (sys.argv[0], urllib.quote(json.dumps(enable_json_transcode(transcode_json)))) ))
+                #printDebug.debug("Setting transcode options to [%s]" % sys.argv[0]+'?'+urllib.quote(json.dumps(enable_json_transcode(transcode_json))))
 
             liz.addContextMenuItems( context, settings.contextReplace )
 
@@ -4200,7 +4201,7 @@ def create_json_parameters_string(command=None, args=None, mode=None, server=Non
  
 def enable_json_transcode(json):
     json['request']['transcode']=True
-    return 
+    return json
     
 ##So this is where we really start the plugin.
 
