@@ -304,8 +304,8 @@ def addGUIItem(url, details, extraData, context=None, folder=True, request=None)
 
             if (not folder) and extraData.get('type','video').lower() == "video":
                 #Play Transcoded
-                context.insert(0,('Play Transcoded', "XBMC.PlayMedia(%s&transcode=1)" % u , ))
-                printDebug.debug("Setting transcode options to [%s&transcode=1]" % u)
+                context.insert(0,('Play Transcoded', "XBMC.PlayMedia(%s?%s)" % (sys.argv[0], urllib.quote(json.dumps(enable_json_transcode(request)))) ))
+                printDebug.debug("Setting transcode options to [%s]" % sys.argv[0]+'?'+urllib.quote(json.dumps(enable_json_transcode(request))))
 
             liz.addContextMenuItems( context, settings.contextReplace )
 
@@ -567,8 +567,11 @@ def enforceSkinView(mode):
         print "PleXBMC -> skin name or view name error"
         return None
 
-def Movies( url, tree=None ):
+def Movies(tree=None):
     printDebug.debug("== ENTER ==")
+    if tree is None:
+        return
+
     xbmcplugin.setContent(pluginhandle, 'movies')
     
     xbmcplugin.addSortMethod(pluginhandle, 37 ) #maintain original plex sorted
@@ -582,14 +585,9 @@ def Movies( url, tree=None ):
     
     #get the server name from the URL, which was passed via the on screen listing..
 
-    server=plex_network.get_server_from_url(url)
-
-    tree=getXML(url,tree)
-    if tree is None:
-        return
-
     setWindowHeading(tree)
     randomNumber=str(random.randint(1000000000,9999999999))
+    section_number=tree.get('librarySectionID','0')
     #Find all the video tags, as they contain the data we need to link to a file.
     MovieTags=tree.findall('Video')
     fullList=[]
@@ -597,7 +595,7 @@ def Movies( url, tree=None ):
     count=0
     for movie in MovieTags:
 
-        movieTag(url, server, tree, movie, randomNumber)
+        movieTag(section_number, GLOBAL_SERVER, tree, movie, randomNumber)
         count+=1
         
     printDebug.info("PROCESS: It took %s seconds to process %s items" % (time.time()-start_time, count))
@@ -608,10 +606,8 @@ def Movies( url, tree=None ):
 
     xbmcplugin.endOfDirectory(pluginhandle)
 
-def buildContextMenu( url, itemData, server ):
+def buildContextMenu( section, itemData, server ):
     context=[]
-    url_parts = urlparse.urlparse(url)
-    section=url_parts.path.split('/')[3]  
     ID=itemData.get('ratingKey','0')
 
     #Mark media unwatched
@@ -1674,7 +1670,7 @@ def getContent( url ):
 
     if view_group == "movie":
         printDebug.debug( "This is movie XML, passing to Movies")
-        Movies(url, tree)
+        Movies(tree)
     elif view_group == "show":
         printDebug.debug( "This is tv show XML")
         TVShows(url,tree)
@@ -2154,7 +2150,7 @@ def processXML( url, tree=None ):
             playlistTag(url, server, tree, plugin)
             
         elif tree.get('viewGroup') == "movie":
-            Movies(url, tree)
+            Movies(tree)
             return
 
         elif tree.get('viewGroup') == "episode":
@@ -2163,7 +2159,7 @@ def processXML( url, tree=None ):
 
     xbmcplugin.endOfDirectory(pluginhandle,cacheToDisc=True)
 
-def movieTag(url, server, tree, movie, randomNumber):
+def movieTag(section_number, server, tree, movie, randomNumber):
 
     printDebug.debug("---New Item---")
     tempgenre=[]
@@ -2240,7 +2236,7 @@ def movieTag(url, server, tree, movie, randomNumber):
     #Build any specific context menu entries
     if not settings.skipcontext:
         
-        context=buildContextMenu(url, extraData, server)
+        context=buildContextMenu(section_number, extraData, server)
     else:
         context=None
     # http:// <server> <path> &mode=<mode> &t=<rnd>
@@ -2249,8 +2245,8 @@ def movieTag(url, server, tree, movie, randomNumber):
     if "?" in extraData['key']:
         separator = "&"
     u="%s%s%st=%s" % (server.get_url_location(), extraData['key'], separator, randomNumber)
-
-    addGUIItem(u,details,extraData,context,folder=False)
+    request_json=create_json_parameters(mode=extraData['mode'], url=extraData['key'], server=GLOBAL_SERVER.get_uuid())
+    addGUIItem(u,details,extraData,context,folder=False, request=request_json)
     return
     
 def getMediaData ( tag_dict ):
@@ -4202,6 +4198,10 @@ def create_json_parameters( command=None, args=None, mode=None, server=None, url
 def create_json_parameters_string(command=None, args=None, mode=None, server=None, url='', name=None, id=None, transcode=False, identifier=None, indirect=False, force=False):  
     return urllib.quote(json.dumps(create_json_parameters(command, args, mode, server, url, name, id, transcode, identifier, indirect, force)))
  
+def enable_json_transcode(json):
+    json['request']['transcode']=True
+    return 
+    
 ##So this is where we really start the plugin.
 
 __version__  = GLOBAL_SETUP['__version__']
@@ -4405,7 +4405,7 @@ def start_plexbmc():
             TVShows(param_url)
 
         elif json_parameters['mode'] == _MODE_MOVIES:
-            Movies(param_url)
+            Movies(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_ARTISTS:
             artist(param_url)
