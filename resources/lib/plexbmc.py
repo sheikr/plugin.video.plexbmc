@@ -591,7 +591,6 @@ def Movies(tree=None):
     section_number=tree.get('librarySectionID','0')
     #Find all the video tags, as they contain the data we need to link to a file.
     MovieTags=tree.findall('Video')
-    fullList=[]
     start_time=time.time()
     count=0
     for movie in MovieTags:
