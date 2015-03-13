@@ -4213,7 +4213,7 @@ def start_plexbmc():
     except:
         json_parameters=None
     if json_parameters is not None:
-        mode=json_parameters['mode']
+        #mode=json_parameters['mode']
         param_url = json_parameters['request']['url']
 
         param_name=json_parameters['request']['name']
@@ -4231,7 +4231,7 @@ def start_plexbmc():
             params=get_params(sys.argv[2])
         except:
             params={}
-        json_parameters=create_json_parameters(command=sys.argv[1])
+        json_parameters=create_json_parameters(command=sys.argv[1],mode=int(params.get('mode',-1)))
         #Now try and assign some data to them
         param_url=params.get('url',None)
 
@@ -4239,7 +4239,7 @@ def start_plexbmc():
                 param_url = urllib.unquote(param_url)
 
         param_name=urllib.unquote_plus(params.get('name',""))
-        mode=int(params.get('mode',-1))
+        #mode=int(params.get('mode',-1))
         param_transcodeOverride=int(params.get('transcode',0))
         param_identifier=params.get('identifier',None)
         param_indirect=params.get('indirect',None)
@@ -4337,102 +4337,102 @@ def start_plexbmc():
         WINDOW.clearProperty("heading2")
 
         if settings.debug >= printDebug.DEBUG_INFO:
-            print "PleXBMC -> Mode: %s " % mode
+            print "PleXBMC -> Mode: %s " % json_parameters['mode']
             print "PleXBMC -> URL: %s" % param_url
             print "PleXBMC -> Name: %s" % param_name
             print "PleXBMC -> identifier: %s" % param_identifier
 
         #Run a function based on the mode variable that was passed in the URL
-        if ( mode == None ) or ( param_url == None ) or ( len(param_url)<1 ):
+        if ( json_parameters['mode'] == None ) or ( param_url == None ) or ( len(param_url)<1 ):
             displaySections()
 
-        elif mode == _MODE_GETCONTENT:
+        elif json_parameters['mode'] == _MODE_GETCONTENT:
             getContent(param_url)
 
-        elif mode == _MODE_TVSHOWS:
+        elif json_parameters['mode'] == _MODE_TVSHOWS:
             TVShows(param_url)
 
-        elif mode == _MODE_MOVIES:
+        elif json_parameters['mode'] == _MODE_MOVIES:
             Movies(param_url)
 
-        elif mode == _MODE_ARTISTS:
+        elif json_parameters['mode'] == _MODE_ARTISTS:
             artist(param_url)
 
-        elif mode == _MODE_TVSEASONS:
+        elif json_parameters['mode'] == _MODE_TVSEASONS:
             TVSeasons(param_url)
 
-        elif mode == _MODE_PLAYLIBRARY:
+        elif json_parameters['mode'] == _MODE_PLAYLIBRARY:
             playLibraryMedia(param_url,force=force, override=param_transcodeOverride)
 
-        elif mode == _MODE_PLAYSHELF:
+        elif json_parameters['mode'] == _MODE_PLAYSHELF:
             playLibraryMedia(param_url,full_data=True, shelf=True)
 
-        elif mode == _MODE_TVEPISODES:
+        elif json_parameters['mode'] == _MODE_TVEPISODES:
             TVEpisodes(param_url)
 
-        elif mode == _MODE_PLEXPLUGINS:
+        elif json_parameters['mode'] == _MODE_PLEXPLUGINS:
             PlexPlugins(param_url)
 
-        elif mode == _MODE_PROCESSXML:
+        elif json_parameters['mode'] == _MODE_PROCESSXML:
             processXML(param_url)
 
-        elif mode == _MODE_BASICPLAY:
+        elif json_parameters['mode'] == _MODE_BASICPLAY:
             PLAY(param_url)
 
-        elif mode == _MODE_ALBUMS:
+        elif json_parameters['mode'] == _MODE_ALBUMS:
             albums(param_url)
 
-        elif mode == _MODE_TRACKS:
+        elif json_parameters['mode'] == _MODE_TRACKS:
             tracks(param_url)
 
-        elif mode == _MODE_PHOTOS:
+        elif json_parameters['mode'] == _MODE_PHOTOS:
             photo(param_url)
 
-        elif mode == _MODE_MUSIC:
+        elif json_parameters['mode'] == _MODE_MUSIC:
             music(param_url)
 
-        elif mode == _MODE_VIDEOPLUGINPLAY:
+        elif json_parameters['mode'] == _MODE_VIDEOPLUGINPLAY:
             videoPluginPlay(param_url,param_identifier,param_indirect)
 
-        elif mode == _MODE_PLEXONLINE:
+        elif json_parameters['mode'] == _MODE_PLEXONLINE:
             plexOnline(param_url)
 
-        elif mode == _MODE_CHANNELINSTALL:
+        elif json_parameters['mode'] == _MODE_CHANNELINSTALL:
             install(param_url,param_name)
 
-        elif mode == _MODE_CHANNELVIEW:
+        elif json_parameters['mode'] == _MODE_CHANNELVIEW:
             channelView(param_url)
 
-        elif mode == _MODE_PLAYLIBRARY_TRANSCODE:
+        elif json_parameters['mode'] == _MODE_PLAYLIBRARY_TRANSCODE:
             playLibraryMedia(param_url,override=True)
 
-        elif mode == _MODE_MYPLEXQUEUE:
+        elif json_parameters['mode'] == _MODE_MYPLEXQUEUE:
             myPlexQueue()
 
-        elif mode == _MODE_CHANNELSEARCH:
+        elif json_parameters['mode'] == _MODE_CHANNELSEARCH:
             channelSearch( param_url, params.get('prompt') )
 
-        elif mode == _MODE_CHANNELPREFS:
+        elif json_parameters['mode'] == _MODE_CHANNELPREFS:
             channelSettings ( param_url, params.get('id') )
 
-        elif mode == _MODE_SHARED_MOVIES:
+        elif json_parameters['mode'] == _MODE_SHARED_MOVIES:
             displaySections(filter="movies", display_shared=True)
 
-        elif mode == _MODE_SHARED_SHOWS:
+        elif json_parameters['mode'] == _MODE_SHARED_SHOWS:
             displaySections(filter="tvshows", display_shared=True)
             
-        elif mode == _MODE_SHARED_PHOTOS:
+        elif json_parameters['mode'] == _MODE_SHARED_PHOTOS:
             displaySections(filter="photos", display_shared=True)
             
-        elif mode == _MODE_SHARED_MUSIC:
+        elif json_parameters['mode'] == _MODE_SHARED_MUSIC:
             displaySections(filter="music", display_shared=True)
 
-        elif mode == _MODE_SHARED_ALL:
+        elif json_parameters['mode'] == _MODE_SHARED_ALL:
             displaySections(display_shared=True)
             
-        elif mode == _MODE_DELETE_REFRESH:
+        elif json_parameters['mode'] == _MODE_DELETE_REFRESH:
             plex_network.delete_cache()
             xbmc.executebuiltin("Container.Refresh")
 
-        elif mode == _MODE_PLAYLISTS:
+        elif json_parameters['mode'] == _MODE_PLAYLISTS:
             processXML(param_url)
