@@ -40,6 +40,7 @@ import random
 import xbmc
 import datetime
 import xml.etree.ElementTree as etree
+import json
 from common import *  #Needed first to setup import locations
 from settings import addonSettings
 import plex
@@ -181,7 +182,7 @@ def mediaType( partData, server, dvdplayback=False ):
     printDebug.debug("Returning URL: %s " % filelocation)
     return filelocation
     
-def addGUIItem(url, details, extraData, context=None, folder=True):
+def addGUIItem(url, details, extraData, context=None, folder=True, request=None):
 
         item_title = details.get('title', 'Unknown')
 
@@ -303,7 +304,10 @@ def addGUIItem(url, details, extraData, context=None, folder=True):
 
             liz.addContextMenuItems( context, settings.contextReplace )
 
-        return xbmcplugin.addDirectoryItem(handle=pluginhandle,url=u,listitem=liz,isFolder=folder)
+        if request:    
+            return xbmcplugin.addDirectoryItem(handle=pluginhandle,url=sys.argv[0]+'?'+json.dumps(request),listitem=liz,isFolder=folder)
+        else:    
+            return xbmcplugin.addDirectoryItem(handle=pluginhandle,url=u,listitem=liz,isFolder=folder)
 
 def displaySections( filter=None, display_shared=False ):
         printDebug.debug("== ENTER ==")
@@ -371,8 +375,10 @@ def displaySections( filter=None, display_shared=False ):
                 else:
                     context=None
 
+                request_json = create_json_parameters( mode=mode, server=server.get_uuid(), url=path)
+                    
                 #Build that listing..
-                addGUIItem(section_url, details,extraData, context)
+                addGUIItem(section_url, details,extraData, context, request = request_json)
 
         if display_shared:
             xbmcplugin.endOfDirectory(pluginhandle, cacheToDisc=True)
@@ -402,7 +408,10 @@ def displaySections( filter=None, display_shared=False ):
 
             extraData['mode']=_MODE_CHANNELVIEW
             u="%s/system/plugins/all" % server.get_url_location()
-            addGUIItem(u,details,extraData)
+            
+            request_json = create_json_parameters( mode=_MODE_CHANNELVIEW, server=server.get_uuid(), url='/system/plugins/all')
+            
+            addGUIItem(u,details,extraData, request = request_json)
 
             #Create plexonline link
             details['title']=prefix+"Plex Online"
@@ -410,8 +419,10 @@ def displaySections( filter=None, display_shared=False ):
             extraData['thumb'] = g_thumb
             extraData['mode'] = _MODE_PLEXONLINE
 
-            u="%s/system/plexonline" % server.get_url_location()            
-            addGUIItem(u,details,extraData)
+            u="%s/system/plexonline" % server.get_url_location()  
+            request_json = create_json_parameters( mode=_MODE_PLEXONLINE, server=server.get_uuid(), url='/system/plexonline')
+            
+            addGUIItem(u,details,extraData,request=request_json)
             
             #create playlist link
             details['title']=prefix+"Playlists"
@@ -419,8 +430,10 @@ def displaySections( filter=None, display_shared=False ):
             extraData['thumb'] = g_thumb
             extraData['mode'] = _MODE_PLAYLISTS
 
-            u="%s/system/playlists" % server.get_url_location()            
-            addGUIItem(u,details,extraData)
+            u="%s/system/playlists" % server.get_url_location() 
+            request_json = create_json_parameters( mode=_MODE_PLAYLISTS, server=server.get_uuid(), url='/system/playlists')
+            
+            addGUIItem(u,details,extraData,request=request_json)
             
             
         if __settings__.getSetting("cache") == "true":
@@ -431,7 +444,9 @@ def displaySections( filter=None, display_shared=False ):
             extraData['mode']= _MODE_DELETE_REFRESH
 
             u="http://nothing"
-            addGUIItem(u,details,extraData)
+            request_json = create_json_parameters( command='refreshplexbmc', mode=_MODE_DELETE_REFRESH, server=server.get_uuid())
+            
+            addGUIItem(u,details,extraData,request=request_json)
 
 
         #All XML entries have been parsed and we are ready to allow the user to browse around.  So end the screen listing.
@@ -4091,7 +4106,43 @@ def setMasterServer () :
     printDebug.debug("Setting master server to: %s" % servers[result].get_name() )
     settings.update_master_server(servers[result].get_name() )
     return
-  
+
+def process_json_parameters(parameters):
+    '''
+          json { 'command' : 'command string' , 
+                 'mode' : <mode> , 
+                 'request' : { 'server': <servername> , 
+                               'url' : <urlpath> , 
+                               'name' : <name> , 
+                               'transcode' : <true|false> , 
+                               'identifier': <identifier> ,
+                               'indirect' : <true|false> ,
+                               'force'    : <true|false> } }
+    '''
+    if parameters.startswith('?'):
+        parameters=parameters[1:]
+    
+    if not parameters.startswith('content'):
+        try:
+            plugin_orders=json.loads(urllib.unquote(parameters))
+            printDebug.debug("Loading json contains: %s" % plugin_orders)
+            return plugin_orders
+        except:  
+            printDebug.info("json failed.. falling back to url params:")
+    
+    return None
+
+def create_json_parameters( command=None, mode=None, server=None, url=None, name=None, transcode=False, identifier=None, indirect=False, force=False):
+    return {'command' : command,
+            'mode'    : mode,
+            'request' : { 'server' : server ,
+                          'url' :  url , 
+                          'name' : name , 
+                          'transcode' : transcode, 
+                          'identifier': identifier ,
+                          'indirect' : indirect ,
+                          'force'    : force } }
+ 
 ##So this is where we really start the plugin.
 
 __version__  = GLOBAL_SETUP['__version__']
@@ -4144,25 +4195,42 @@ pluginhandle=0
 plex_network=plex.Plex(load=True)
 
 def start_plexbmc():
-    try:
-        params=get_params(sys.argv[2])
-    except:
-        params={}
+    
+    printDebug.info("Attempting to load JSON")
+    json_parameters=process_json_parameters(sys.argv[2])
+    if json_parameters is not None:
+        mode=json_parameters['mode']
+        param_url = json_parameters['request']['url']
 
-    #Now try and assign some data to them
-    param_url=params.get('url',None)
+        param_name=json_parameters['request']['name']
+        param_transcodeOverride=json_parameters['request']['transcode']
+        param_identifier=json_parameters['request']['identifier']
+        param_indirect=json_parameters['request']['indirect']
+        force=json_parameters['request']['force']
+        server=plex_network.get_server_from_uuid(json_parameters['request']['server'])
+        param_url=server.get_url_location()+param_url
 
-    if param_url and ( param_url.startswith('http') or param_url.startswith('file') ):
-            param_url = urllib.unquote(param_url)
+    else:
+        try:
+            printDebug.info("Processing using url params")
+            params=get_params(sys.argv[2])
+        except:
+            params={}
 
-    param_name=urllib.unquote_plus(params.get('name',""))
-    mode=int(params.get('mode',-1))
-    param_transcodeOverride=int(params.get('transcode',0))
-    param_identifier=params.get('identifier',None)
-    param_indirect=params.get('indirect',None)
-    force=params.get('force')
+        #Now try and assign some data to them
+        param_url=params.get('url',None)
 
+        if param_url and ( param_url.startswith('http') or param_url.startswith('file') ):
+                param_url = urllib.unquote(param_url)
 
+        param_name=urllib.unquote_plus(params.get('name',""))
+        mode=int(params.get('mode',-1))
+        param_transcodeOverride=int(params.get('transcode',0))
+        param_identifier=params.get('identifier',None)
+        param_indirect=params.get('indirect',None)
+        force=params.get('force')
+
+        
     #Populate Skin variables
     if str(sys.argv[1]) == "skin":
         try:
@@ -4352,4 +4420,3 @@ def start_plexbmc():
 
         elif mode == _MODE_PLAYLISTS:
             processXML(param_url)
-
