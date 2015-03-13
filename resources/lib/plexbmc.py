@@ -302,7 +302,7 @@ def addGUIItem(url, details, extraData, context=None, folder=True, request=None)
         if context is not None:
             printDebug.debug("Building Context Menus")
 
-            if (not folder) and extraData.get('type','video').lower() == "video":
+            #if (not folder) and extraData.get('type','video').lower() == "video":
                 #Play Transcoded
                 #transcode_json=request
                 #context.insert(0,('Play Transcoded', "XBMC.PlayMedia(%s?%s)" % (sys.argv[0], urllib.quote(json.dumps(enable_json_transcode(transcode_json)))) ))
@@ -634,14 +634,14 @@ def TVShows( url, tree=None ):
     xbmcplugin.addSortMethod(pluginhandle, 28 ) #by MPAA
 
     #Get the URL and server name.  Get the XML and parse
-    tree=getXML(url,tree)
     if tree is None:
         return
 
-    server=plex_network.get_server_from_url(url)
+    server=GLOBAL_SERVER
 
     setWindowHeading(tree)
     #For each directory tag we find
+    section_number=tree.get('librarySectionID','0')
     ShowTags=tree.findall('Directory')
     for show in ShowTags:
 
@@ -692,17 +692,17 @@ def TVShows( url, tree=None ):
         if settings.flatten == "2":
             printDebug.debug("Flattening all shows")
             extraData['mode']=_MODE_TVEPISODES
-            u='%s%s'  % ( server.get_url_location(), extraData['key'].replace("children","allLeaves"))
+            u='%s'  % extraData['key'].replace("children","allLeaves")
         else:
             extraData['mode']=_MODE_TVSEASONS
-            u='%s%s'  % ( server.get_url_location(), extraData['key'])
+            u='%s'  % extraData['key']
 
         if not settings.skipcontext:
-            context=buildContextMenu(url, extraData, server)
+            context=buildContextMenu(section_number, extraData, server)
         else:
             context=None
 
-        request_json=create_json_parameters(url=extraData['key'], mode=extraData['mode'], server=server.get_uuid()) 
+        request_json=create_json_parameters(url=u, mode=extraData['mode'], server=server.get_uuid()) 
         addGUIItem(u,details,extraData, context, request=request_json)
 
     printDebug ("Skin override is: %s" % __settings__.getSetting('skinoverride'))
@@ -717,8 +717,8 @@ def TVSeasons( url ):
     xbmcplugin.setContent(pluginhandle, 'seasons')
 
     #Get URL, XML and parse
-    server=plex_network.get_server_from_url(url)
-    tree=getXML(url)
+    server=GLOBAL_SERVER
+    tree=server.processed_xml(url)
     if tree is None:
         return
 
@@ -732,14 +732,13 @@ def TVSeasons( url ):
     sectionart=getFanart(tree, server)
     banner=tree.get('banner')
     setWindowHeading(tree)
+    section_number=tree.get('librarySectionID','0')
     #For all the directory tags
     SeasonTags=tree.findall('Directory')
     for season in SeasonTags:
 
         if willFlatten:
-            url=server.get_url_location()+season.get('key')
-            TVEpisodes(url)
-            return
+            return TVEpisodes(url+season.get('key'))
 
         watched=int(season.get('viewedLeafCount',0))
 
@@ -782,7 +781,7 @@ def TVSeasons( url ):
         url='%s%s' % ( server.get_url_location() , extraData['key'] )
 
         if not settings.skipcontext:
-            context=buildContextMenu(url, season, server)
+            context=buildContextMenu(section_number, season, server)
         else:
             context=None
 
@@ -821,9 +820,9 @@ def TVEpisodes( url, tree=None ):
 
     #get season thumb for SEASON NODE
     season_thumb = tree.get('thumb', '')
-
+    section_number=tree.get('librarySectionID','0')
     ShowTags=tree.findall('Video')
-    server=plex_network.get_server_from_url(url)
+    server=GLOBAL_SERVER
 
     if not settings.skipimages:
         sectionart=getFanart(tree, server)
@@ -920,7 +919,7 @@ def TVEpisodes( url, tree=None ):
 
         #Build any specific context menu entries
         if not settings.skipcontext:
-            context=buildContextMenu(url, extraData,server)
+            context=buildContextMenu(section_number, extraData,server)
         else:
             context=None
 
@@ -4199,9 +4198,9 @@ def create_json_parameters( command=None, args=None, mode=None, server=None, url
 def create_json_parameters_string(command=None, args=None, mode=None, server=None, url='', name=None, id=None, transcode=False, identifier=None, indirect=False, force=False):  
     return urllib.quote(json.dumps(create_json_parameters(command, args, mode, server, url, name, id, transcode, identifier, indirect, force)))
  
-def enable_json_transcode(json):
-    json['request']['transcode']=True
-    return json
+def enable_json_transcode(json_transcode):
+    json_transcode['request']['transcode']=True
+    return json_transcode
     
 ##So this is where we really start the plugin.
 
@@ -4403,7 +4402,7 @@ def start_plexbmc():
             getContent(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_TVSHOWS:
-            TVShows(param_url)
+            TVShows(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_MOVIES:
             Movies(json_parameters['request']['url'])
@@ -4412,7 +4411,7 @@ def start_plexbmc():
             artist(param_url)
 
         elif json_parameters['mode'] == _MODE_TVSEASONS:
-            TVSeasons(param_url)
+            TVSeasons(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_PLAYLIBRARY:
             playLibraryMedia(param_url,force=force, override=param_transcodeOverride)
