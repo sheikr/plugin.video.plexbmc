@@ -386,7 +386,8 @@ def displaySections( filter=None, display_shared=False ):
                     
         #For each of the servers we have identified            
         if __settings__.getSetting('myplex_user') != '':
-            addGUIItem('http://myplexqueue', {'title': 'myplex Queue'}, {'thumb': g_thumb, 'type': 'Video', 'mode': _MODE_MYPLEXQUEUE})
+            request_json = create_json_parameters(mode=_MODE_MYPLEXQUEUE, server=server.get_uuid())       
+            addGUIItem('http://myplexqueue', {'title': 'myplex Queue'}, {'thumb': g_thumb, 'type': 'Video', 'mode': _MODE_MYPLEXQUEUE}, request=request_json)
 
         for server in server_list:
         
@@ -609,13 +610,13 @@ def buildContextMenu( url, itemData, server ):
     ID=itemData.get('ratingKey','0')
 
     #Mark media unwatched
-    context.append(('Mark as Unwatched', 'RunScript(plugin.video.plexbmc, watch, %s, %s, %s)' % ( server.get_uuid(), ID, 'unwatch' ) ))
-    context.append(('Mark as Watched', 'RunScript(plugin.video.plexbmc, watch, %s, %s, %s)' % ( server.get_uuid(), ID, 'watch' ) ))
-    context.append(('Rescan library section', 'RunScript(plugin.video.plexbmc, update, %s, %s)' % ( server.get_uuid(), section ) ))
-    context.append(('Delete media', "RunScript(plugin.video.plexbmc, delete, %s, %s)" % ( server.get_uuid(), ID) ))
-    context.append(('Reload Section', 'RunScript(plugin.video.plexbmc, refresh)' ))
-    context.append(('Select Audio', "RunScript(plugin.video.plexbmc, audio, %s, %s)" % ( server.get_uuid(), ID) ))
-    context.append(('Select Subtitle', "RunScript(plugin.video.plexbmc, subs, %s, %s)" % ( server.get_uuid(), ID) ))
+    context.append(('Mark as Unwatched', 'RunScript(plugin.video.plexbmc, %s, %s)' % ( pluginhandle, create_json_parameters_string(server = server.get_uuid(), id=ID, command='watch', args="unwatch" )) ))
+    context.append(('Mark as Watched', 'RunScript(plugin.video.plexbmc, %s, %s)' % ( pluginhandle, create_json_parameters_string(server = server.get_uuid(), id=ID, command='watch', args="watch" )) ))
+    context.append(('Rescan library section', 'RunScript(plugin.video.plexbmc, %s, %s)' % ( pluginhandle, create_json_parameters_string(server = server.get_uuid(), id=ID, command='update', args=section )) ))
+    context.append(('Delete media', "RunScript(plugin.video.plexbmc, %s, %s)" % ( pluginhandle, create_json_parameters_string(server = server.get_uuid(), id=ID, command='delete' )) ))
+    context.append(('Reload Section', 'RunScript(plugin.video.plexbmc, %s, %s)' % ( pluginhandle, create_json_parameters_string(command='refresh' )) ))
+    context.append(('Select Audio', "RunScript(plugin.video.plexbmc, %s, %s)" % ( pluginhandle, create_json_parameters_string(server = server.get_uuid(), id=ID, command='audio' )) ))
+    context.append(('Select Subtitle', "RunScript(plugin.video.plexbmc, %s, %s)" % ( pluginhandle, create_json_parameters_string(server = server.get_uuid(), id=ID, command='subs' )) ))
 
     printDebug.debug("Using context menus: %s" % context)
 
@@ -699,7 +700,8 @@ def TVShows( url, tree=None ):
         else:
             context=None
 
-        addGUIItem(u,details,extraData, context)
+        request_json=create_json_parameters(url=extraData['key'], mode=extraData['mode'], server=server.get_uuid()) 
+        addGUIItem(u,details,extraData, context, request=request_json)
 
     printDebug ("Skin override is: %s" % __settings__.getSetting('skinoverride'))
     view_id = enforceSkinView('tv')
@@ -783,7 +785,9 @@ def TVSeasons( url ):
             context=None
 
         #Build the screen directory listing
-        addGUIItem(url,details,extraData, context)
+        request_json=create_json_parameters(url=extraData['key'], mode=extraData['mode'], server=server.get_uuid()) 
+
+        addGUIItem(url,details,extraData, context, request=request_json)
 
     printDebug ("Skin override is: %s" % __settings__.getSetting('skinoverride'))
     view_id = enforceSkinView('season')
@@ -923,8 +927,9 @@ def TVEpisodes( url, tree=None ):
         if "?" in extraData['key']:
             separator = "&"
         u="%s%s%st=%s" % (server.get_url_location(), extraData['key'], separator, randomNumber)
+        request_json=create_json_parameters(url="%s?t=%s" % (extraData['key'], randomNumber), mode=extraData['mode'], server=server.get_uuid()) 
 
-        addGUIItem(u,details,extraData, context, folder=False)
+        addGUIItem(u,details,extraData, context, folder=False, request=request_json)
 
     printDebug ("Skin override is: %s" % __settings__.getSetting('skinoverride'))
     view_id = enforceSkinView('episode')
@@ -1705,6 +1710,7 @@ def processDirectory( url, tree=None ):
         extraData['mode'] = _MODE_GETCONTENT
         u='%s' % (getLinkURL(url, directory, server))
 
+        request_json=create_json_parameters(url=extraData['key'], mode=extraData['mode'], server=server.get_uuid()) 
         addGUIItem(u, details, extraData)
 
     xbmcplugin.endOfDirectory(pluginhandle, cacheToDisc=True)
@@ -4132,16 +4138,21 @@ def process_json_parameters(parameters):
     
     return None
 
-def create_json_parameters( command=None, mode=None, server=None, url=None, name=None, transcode=False, identifier=None, indirect=False, force=False):
+def create_json_parameters( command=None, args=None, mode=None, server=None, url='', name=None, id=None, transcode=False, identifier=None, indirect=False, force=False):
     return {'command' : command,
+            'args'    : args,
             'mode'    : mode,
             'request' : { 'server' : server ,
                           'url' :  url , 
-                          'name' : name , 
+                          'name' : name ,
+                          'id'   : id,
                           'transcode' : transcode, 
                           'identifier': identifier ,
                           'indirect' : indirect ,
                           'force'    : force } }
+
+def create_json_parameters_string(command=None, args=None, mode=None, server=None, url='', name=None, id=None, transcode=False, identifier=None, indirect=False, force=False):  
+    return urllib.quote(json.dumps(create_json_parameters(command, args, mode, server, url, name, id, transcode, identifier, indirect, force)))
  
 ##So this is where we really start the plugin.
 
@@ -4197,7 +4208,10 @@ plex_network=plex.Plex(load=True)
 def start_plexbmc():
     
     printDebug.info("Attempting to load JSON")
-    json_parameters=process_json_parameters(sys.argv[2])
+    try:
+        json_parameters=process_json_parameters(sys.argv[2])
+    except:
+        json_parameters=None
     if json_parameters is not None:
         mode=json_parameters['mode']
         param_url = json_parameters['request']['url']
@@ -4209,6 +4223,7 @@ def start_plexbmc():
         force=json_parameters['request']['force']
         server=plex_network.get_server_from_uuid(json_parameters['request']['server'])
         param_url=server.get_url_location()+param_url
+        print json_parameters['command']
 
     else:
         try:
@@ -4216,7 +4231,7 @@ def start_plexbmc():
             params=get_params(sys.argv[2])
         except:
             params={}
-
+        json_parameters=create_json_parameters(command=sys.argv[1])
         #Now try and assign some data to them
         param_url=params.get('url',None)
 
@@ -4230,41 +4245,42 @@ def start_plexbmc():
         param_indirect=params.get('indirect',None)
         force=params.get('force')
 
+         
         
     #Populate Skin variables
-    if str(sys.argv[1]) == "skin":
+    if json_parameters['command'] == "skin":
         try:
             type=sys.argv[2]
         except:
             type=None
         skin(type=type)
 
-    elif str(sys.argv[1]) == "amberskin":
+    elif json_parameters['command'] == "amberskin":
         amberskin()
      
     #Populate recently/on deck shelf items 
-    elif str(sys.argv[1]) == "shelf":
+    elif json_parameters['command'] == "shelf":
         shelf()
 
     #Populate channel recently viewed items    
-    elif str(sys.argv[1]) == "channelShelf":
+    elif json_parameters['command'] == "channelShelf":
         shelfChannel()
         
     #Send a library update to Plex    
-    elif sys.argv[1] == "update":
-        server_uuid=sys.argv[2]
-        section_id=sys.argv[3]
+    elif json_parameters['command'] == "update":
+        server_uuid=server_uuid=json_parameters['request']['server']
+        section_id=server_uuid=json_parameters['args']
         libraryRefresh(server_uuid, section_id)
         
     #Mark an item as watched/unwatched in plex    
-    elif sys.argv[1] == "watch":
-        server_uuid=sys.argv[2]
-        metadata_id=sys.argv[3]
-        watch_status=sys.argv[4]
+    elif json_parameters['command'] == "watch":
+        server_uuid=json_parameters['request']['server']
+        metadata_id=json_parameters['request']['id']
+        watch_status=json_parameters['args']
         watched(server_uuid, metadata_id, watch_status )
         
     #Open the add-on settings page, then refresh plugin
-    elif sys.argv[1] == "setting":
+    elif json_parameters['command'] == "setting":
         __settings__.openSettings()
         WINDOW = xbmcgui.getCurrentWindowId()
         if WINDOW == 10000:
@@ -4280,33 +4296,33 @@ def start_plexbmc():
         shelfChannel(server_list)
 
     #delete media from PMS    
-    elif sys.argv[1] == "delete":
-        server_uuid=sys.argv[2]
-        metadata_id=sys.argv[3]
+    elif json_parameters['command'] == "delete":
+        server_uuid=json_parameters['request']['server']
+        metadata_id=json_parameters['request']['id']
         deleteMedia(server_uuid, metadata_id)
 
     #Refresh the current XBMC listing    
-    elif sys.argv[1] == "refresh":
+    elif json_parameters['command'] == "refresh":
         xbmc.executebuiltin("Container.Refresh")
         
     #Display subtitle selection screen    
-    elif sys.argv[1] == "subs":
-        server_uuid=sys.argv[2]
-        metadata_id=sys.argv[3]
+    elif json_parameters['command'] == "subs":
+        server_uuid=json_parameters['request']['server']
+        metadata_id=json_parameters['request']['id']
         alterSubs(server_uuid, metadata_id)
         
     #Display audio streanm selection screen    
-    elif sys.argv[1] == "audio":
-        server_uuid=sys.argv[2]
-        metadata_id=sys.argv[3]
+    elif json_parameters['command'] == "audio":
+        server_uuid=json_parameters['request']['server']
+        metadata_id=json_parameters['request']['id']
         alterAudio(server_uuid, metadata_id)
         
     #Allow a mastre server to be selected (for myplex queue)    
-    elif sys.argv[1] == "master":
+    elif json_parameters['command'] == "master":
         setMasterServer()
 
     #Delete cache and refresh it    
-    elif str(sys.argv[1]) == "cacherefresh":
+    elif json_parameters['command'] == "cacherefresh":
         plex_network.delete_cache()
         xbmc.executebuiltin("ReloadSkin()")
 
