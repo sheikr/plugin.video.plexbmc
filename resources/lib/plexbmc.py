@@ -1645,7 +1645,7 @@ def getContent( url ):
     '''
     printDebug.debug("== ENTER ==")
 
-    server=plex_network.get_server_from_url(url)
+    server=GLOBAL_SERVER
     lastbit=url.split('/')[-1]
     printDebug.debug("URL suffix: %s" % lastbit)
 
@@ -1702,7 +1702,7 @@ def processDirectory( url, tree=None ):
     printDebug.debug("Processing secondary menus")
     xbmcplugin.setContent(pluginhandle, "")
 
-    server = plex_network.get_server_from_url(url)
+    server = GLOBAL_SERVER
     setWindowHeading(tree)
     for directory in tree:
         details={'title' : directory.get('title','Unknown').encode('utf-8') }
@@ -4252,6 +4252,7 @@ g_sessionID=None
 
 pluginhandle=0
 plex_network=plex.Plex(load=True)
+GLOBAL_SERVER=''
 
 def start_plexbmc():
     
@@ -4273,6 +4274,9 @@ def start_plexbmc():
         param_url=server.get_url_location()+param_url
         print json_parameters['command']
 
+        global GLOBAL_SERVER
+        GLOBAL_SERVER=plex_network.get_server_from_uuid(json_parameters['request']['server'])
+        
     else:
         try:
             printDebug.info("Processing using url params")
@@ -4395,7 +4399,7 @@ def start_plexbmc():
             displaySections()
 
         elif json_parameters['mode'] == _MODE_GETCONTENT:
-            getContent(param_url)
+            getContent(json_parameters['request']['url'])
 
         elif json_parameters['mode'] == _MODE_TVSHOWS:
             TVShows(param_url)
