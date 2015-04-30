@@ -288,7 +288,7 @@ class Plex:
                     printDebug.info("GDM discovery completed")
 
                     for device in gdm_server_name:
-                        new_server=PlexMediaServer(name=device['serverName'],address=device['server'], port=device['port'], discovery='local', uuid=device['uuid'])
+                        new_server=PlexMediaServer(name=device['serverName'],address=device['server'], port=device['port'], discovery='discovery', uuid=device['uuid'])
                         new_server.set_user(self.effective_user)
                         new_server.set_token(self.effective_token)
 
@@ -588,7 +588,10 @@ class Plex:
         result['thumb'] = xml.get('thumb')
 
         subscription = xml.find('subscription')
-        result['plexpass'] = subscription.get('plan')
+        if subscription is not None:
+            result['plexpass'] = subscription.get('plan')
+        else:
+            result['plexpass'] = "No Subscription"
 
         date= xml.find('joined-at').text
         result['membersince'] = date.split(' ')[0]
