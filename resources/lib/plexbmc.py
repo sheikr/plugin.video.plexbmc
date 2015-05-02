@@ -1,9 +1,9 @@
 '''
-    @document   : default.py
+    @document   : plexbmc.py
     @package    : PleXBMC add-on
     @author     : Hippojay (aka Dave Hawes-Johnson)
-    @copyright  : 2011-2012, Hippojay
-    @version    : 3.0 (frodo)
+    @copyright  : 2011-2015, Hippojay
+    @version    : 4.0 (Helix)
 
     @license    : Gnu General Public License - see LICENSE.TXT
     @description: pleXBMC XBMC add-on
@@ -2582,7 +2582,9 @@ def skin( server_list=None, type=None ):
     sharedCount=0
     shared_flag={}
     hide_shared = settings.get_setting('hide_shared')
-
+    
+    WINDOW.setProperty("plexbmc.myplex_signedin" , str(plex_network.is_myplex_signedin()))
+    WINDOW.setProperty("plexbmc.plexhome_enabled" , str(plex_network.is_plexhome_enabled()))
     if server_list is None:
         server_list=plex_network.get_server_list()
 
@@ -2707,7 +2709,7 @@ def skin( server_list=None, type=None ):
         if server.is_secondary():
             continue
 
-        if settings.channelview:
+        if settings.get_setting('channelview'):
             WINDOW.setProperty("plexbmc.channel", "1")
             WINDOW.setProperty("plexbmc.%d.server.channel" % (serverCount) , "ActivateWindow(VideoLibrary,plugin://plugin.video.plexbmc/?url=%s/channels/all&mode=21,return)" % server.get_url_location())
         else:
@@ -2753,6 +2755,10 @@ def amberskin():
 
     WINDOW.setProperty("plexbmc.myplex_signedin" , str(plex_network.is_myplex_signedin()))
     WINDOW.setProperty("plexbmc.plexhome_enabled" , str(plex_network.is_plexhome_enabled()))
+
+    if plex_network.is_plexhome_enabled():
+        WINDOW.setProperty("plexbmc.plexhome_user" , str(plex_network.get_myplex_user()))
+        WINDOW.setProperty("plexbmc.plexhome_avatar" , str(plex_network.get_myplex_avatar()))
 
     printDebug.debug("Using list of %s servers: %s " % (len(server_list), server_list))
 
@@ -4043,7 +4049,9 @@ def start_plexbmc():
     elif command == "switchuser":
         if switch_user():
             clear_skin_sections()
-
+            WINDOW = xbmcgui.Window(10000)
+            WINDOW.setProperty("plexbmc.plexhome_user" , str(plex_network.get_myplex_user()))
+            WINDOW.setProperty("plexbmc.plexhome_avatar" , str(plex_network.get_myplex_avatar()))
             if xbmcgui.getCurrentWindowId() == 10000:
                 printDebug.debug("Currently in home - refreshing to allow new settings to be taken")
                 xbmc.executebuiltin("ReloadSkin()")
@@ -4059,6 +4067,8 @@ def start_plexbmc():
         ret = xbmcgui.Dialog().yesno("myplex","You are currently signed into myPlex. Are you sure you want to sign out?")
         if ret:
             plex_network.signout()
+            WINDOW.clearProperty("plexbmc.plexhome_user" )
+            WINDOW.clearProperty("plexbmc.plexhome_avatar" )            
             clear_skin_sections()
             xbmc.executebuiltin("ReloadSkin()")
 
