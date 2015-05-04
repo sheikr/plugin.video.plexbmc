@@ -544,7 +544,7 @@ def Movies( url, tree=None ):
     if view_id:
         xbmc.executebuiltin("Container.SetViewMode(%s)" % view_id)
 
-    xbmcplugin.endOfDirectory(pluginhandle)
+    xbmcplugin.endOfDirectory(pluginhandle, cacheToDisc=settings.get_setting('kodicache'))
 
 def buildContextMenu( url, itemData, server ):
     context=[]
@@ -2357,7 +2357,7 @@ def getThumb(data, server, width=720, height=720):
 
     return GENERIC_THUMBNAIL
 
-def getShelfThumb(data, server, seasonThumb=False, width=400, height=400):
+def getShelfThumb(data, server, seasonThumb=False, prefer_season=False, width=400, height=400):
     '''
         Simply take a URL or path and determine how to format for images
         @ input: elementTree element, server name
@@ -2365,7 +2365,10 @@ def getShelfThumb(data, server, seasonThumb=False, width=400, height=400):
     '''
 
     if seasonThumb:
-        thumbnail=data.get('grandparentThumb','').split('?t')[0].encode('utf-8')
+        if prefer_season:
+            thumbnail=data.get('parentThumb',data.get('grandparentThumb','')).split('?t')[0].encode('utf-8')
+        else:
+            thumbnail=data.get('grandparentThumb','').split('?t')[0].encode('utf-8') 
     else:
         thumbnail=data.get('thumb','').split('?t')[0].encode('utf-8')
 
@@ -3029,7 +3032,7 @@ def fullShelf(server_list={}):
 
             if settings.get_setting('homeshelf') == '0' or settings.get_setting('homeshelf') == '2':
 
-                tree = server_details.get_recently_added(section=section.get_key(), size=15)
+                tree = server_details.get_recently_added(section=section.get_key(), size=15, hide_watched=settings.get_setting('hide_watched_recent_items'))
 
                 if tree is None:
                     printDebug.debug("PLEXBMC -> RecentlyAdded items not found on: %s" % server_details.get_url_location())
@@ -3043,7 +3046,7 @@ def fullShelf(server_list={}):
                     if eachitem.get("type", "") == "episode":
                         key = int(eachitem.get("parentRatingKey"))  # season identifier
 
-                        if key in ep_helper or (settings.get_setting('hide_watched_recent_items') and int(eachitem.get("viewCount", 0)) > 0):
+                        if key in ep_helper:
                             continue
 
                         ep_helper[key] = key  # use seasons as dict key so we can check
@@ -3065,7 +3068,8 @@ def fullShelf(server_list={}):
 
     printDebug.debugplus("Recent object is: %s" % recent_list)
     printDebug.debugplus("ondeck object is: %s" % ondeck_list)
-
+    prefer_season=settings.get_setting('prefer_season_thumbs')
+    
     #For each of the servers we have identified
     for media, source_server, libuuid in recent_list:
 
@@ -3078,45 +3082,41 @@ def fullShelf(server_list={}):
             title_name=media.get('title','Unknown').encode('UTF-8')
             printDebug.debug("Found a recent movie entry: [%s]" % title_name)
 
-            if not settings.get_setting('hide_watched_recent_items') or media.get("viewCount", 0) == 0:
+            title_url="plugin://plugin.video.plexbmc?url=%s&mode=%s&t=%s" % ( getLinkURL(source_server.get_url_location(),media,source_server), MODE_PLAYSHELF, randomNumber)
+            title_thumb = getShelfThumb(media,source_server)
 
-                title_url="plugin://plugin.video.plexbmc?url=%s&mode=%s&t=%s" % ( getLinkURL(source_server.get_url_location(),media,source_server), MODE_PLAYSHELF, randomNumber)
-                title_thumb = getShelfThumb(media,source_server)
-
-                if media.get('duration') > 0:
-                    #movie_runtime = media.get('duration', '0')
-                    movie_runtime = str(int(float(media.get('duration'))/1000/60))
-                else:
-                    movie_runtime = ""
-
-                if media.get('rating') > 0:
-                    movie_rating = str(round(float(media.get('rating')), 1))
-                else:
-                    movie_rating = ''
-
-                WINDOW.setProperty("Plexbmc.LatestMovie.%s.Path" % recentMovieCount, title_url)
-                WINDOW.setProperty("Plexbmc.LatestMovie.%s.Title" % recentMovieCount, title_name)
-                WINDOW.setProperty("Plexbmc.LatestMovie.%s.Year" % recentMovieCount, media.get('year', '').encode('UTF-8'))
-                WINDOW.setProperty("Plexbmc.LatestMovie.%s.Rating" % recentMovieCount, movie_rating)
-                WINDOW.setProperty("Plexbmc.LatestMovie.%s.Duration" % recentMovieCount, movie_runtime)
-                WINDOW.setProperty("Plexbmc.LatestMovie.%s.Thumb" % recentMovieCount, title_thumb)
-                WINDOW.setProperty("Plexbmc.LatestMovie.%s.uuid" % recentMovieCount, libuuid)
-                WINDOW.setProperty("Plexbmc.LatestMovie.%s.Plot" % recentMovieCount, media.get('summary', '').encode('UTF-8'))
-
-                m_genre = []
-
-                for child in media:
-                    if child.tag == "Genre":
-                        m_genre.append(child.get('tag'))
-                    else:
-                        continue
-
-                WINDOW.setProperty("Plexbmc.LatestMovie.%s.Genre" % recentMovieCount, ", ".join(m_genre).encode('UTF-8'))
-
-                recentMovieCount += 1
-
+            if media.get('duration') > 0:
+                #movie_runtime = media.get('duration', '0')
+                movie_runtime = str(int(float(media.get('duration'))/1000/60))
             else:
-                continue
+                movie_runtime = ""
+
+            if media.get('rating') > 0:
+                movie_rating = str(round(float(media.get('rating')), 1))
+            else:
+                movie_rating = ''
+
+            WINDOW.setProperty("Plexbmc.LatestMovie.%s.Path" % recentMovieCount, title_url)
+            WINDOW.setProperty("Plexbmc.LatestMovie.%s.Title" % recentMovieCount, title_name)
+            WINDOW.setProperty("Plexbmc.LatestMovie.%s.Year" % recentMovieCount, media.get('year', '').encode('UTF-8'))
+            WINDOW.setProperty("Plexbmc.LatestMovie.%s.Rating" % recentMovieCount, movie_rating)
+            WINDOW.setProperty("Plexbmc.LatestMovie.%s.Duration" % recentMovieCount, movie_runtime)
+            WINDOW.setProperty("Plexbmc.LatestMovie.%s.Thumb" % recentMovieCount, title_thumb)
+            WINDOW.setProperty("Plexbmc.LatestMovie.%s.uuid" % recentMovieCount, libuuid)
+            WINDOW.setProperty("Plexbmc.LatestMovie.%s.Plot" % recentMovieCount, media.get('summary', '').encode('UTF-8'))
+
+            m_genre = []
+
+            for child in media:
+                if child.tag == "Genre":
+                    m_genre.append(child.get('tag'))
+                else:
+                    continue
+
+            WINDOW.setProperty("Plexbmc.LatestMovie.%s.Genre" % recentMovieCount, ", ".join(m_genre).encode('UTF-8'))
+
+            recentMovieCount += 1
+
 
         elif media.get('type') == "season":
 
@@ -3182,7 +3182,7 @@ def fullShelf(server_list={}):
                 continue
 
             title_url="ActivateWindow(Videos, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % ( getLinkURL(source_server.get_url_location(), media, source_server, season_shelf=True), MODE_TVEPISODES)
-            title_thumb = getShelfThumb(media, source_server, seasonThumb=True)
+            title_thumb = getShelfThumb(media, source_server, seasonThumb=True, prefer_season=prefer_season)
 
             WINDOW.setProperty("Plexbmc.LatestEpisode.%s.Path" % recentSeasonCount, title_url)
             WINDOW.setProperty("Plexbmc.LatestEpisode.%s.EpisodeTitle" % recentSeasonCount, title_name)
@@ -3265,7 +3265,7 @@ def fullShelf(server_list={}):
                 continue
 
             title_url="PlayMedia(plugin://plugin.video.plexbmc?url=%s&mode=%s&t=%s)" % (getLinkURL(source_server.get_url_location(), media, source_server), MODE_PLAYSHELF, randomNumber)
-            title_thumb=getShelfThumb(media, source_server, seasonThumb=True)
+            title_thumb=getShelfThumb(media, source_server, seasonThumb=True, prefer_season=prefer_season)
 
             WINDOW.setProperty("Plexbmc.OnDeckEpisode.%s.Path" % ondeckSeasonCount, title_url)
             WINDOW.setProperty("Plexbmc.OnDeckEpisode.%s.EpisodeTitle" % ondeckSeasonCount, title_name)
