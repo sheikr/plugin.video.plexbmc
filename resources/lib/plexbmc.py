@@ -1210,7 +1210,7 @@ def playLibraryMedia( vids, override=False, force=None, full_data=False, shelf=F
         setAudioSubtitles(streams)
 
     if streams['type'] == "video" or streams['type'] == "music":
-        monitorPlayback(id,server, session)
+        monitorPlayback(id,server, playurl, session)
 
     return
 
@@ -1328,26 +1328,30 @@ def selectMedia( data, server ):
     printDebug.debug("We have selected media at %s" % newurl)
     return newurl
 
-def monitorPlayback( id, server, session=None ):
+def monitorPlayback( id, server, playurl, session=None ):
     printDebug.debug("== ENTER ==")
 
     if session:
         printDebug.debug("We are monitoring a transcode session")
 
-    if settings.get_setting('monitoroff') == "true":
+    if settings.get_setting('monitoroff'):
         return
 
-    monitorCount=0
-    progress = 0
-    complete = 0
     playedTime = 0
     totalTime = 0
+    currentTime = 0
     #Whilst the file is playing back
     while xbmc.Player().isPlaying():
-        #Get the current playback time
+
+        try:
+            if not ( playurl == xbmc.Player().getPlayingFile() ):
+                printDebug.info("File stopped being played")
+                break
+        except: pass
 
         currentTime = int(xbmc.Player().getTime())
         totalTime = int(xbmc.Player().getTotalTime())
+
         try:
             progress = int(( float(currentTime) / float(totalTime) ) * 100)
         except:
@@ -1360,15 +1364,12 @@ def monitorPlayback( id, server, session=None ):
 
             printDebug.debug( "Movies played time: %s secs of %s @ %s%%" % ( currentTime, totalTime, progress) )
             server.report_playback_progress(id,currentTime*1000, state="playing", duration=totalTime*1000)
-            complete=0
             playedTime = currentTime
 
-        xbmc.sleep(5000)
+        xbmc.sleep(2000)
 
     #If we get this far, playback has stopped
-    printDebug.debug("Playback Stopped")
-
-    # set stopped for timeline
+    printDebug.debug("Playback Stopped")        
     server.report_playback_progress(id,playedTime*1000, state='stopped', duration=totalTime*1000)
 
     if session is not None:
@@ -1512,7 +1513,7 @@ def pluginTranscodeMonitor( sessionID, server ):
     #Logic may appear backward, but this does allow for a failed start to be detected
     #First while loop waiting for start
 
-    if settings.get_setting('monitoroff') == "true":
+    if settings.get_setting('monitoroff'):
         return
 
     count=0
@@ -1523,11 +1524,11 @@ def pluginTranscodeMonitor( sessionID, server ):
             #Waited 20 seconds and still no movie playing - assume it isn't going to..
             return
         else:
-            time.sleep(2)
+            xbmc.sleep(2000)
 
     while xbmc.Player().isPlaying():
         printDebug.debug("Waiting for playback to finish")
-        time.sleep(4)
+        xbmc.sleep(4000)
 
     printDebug.debug("Playback Stopped")
     printDebug.debug("Stopping PMS transcode job with session: %s" % sessionID)
@@ -3057,13 +3058,11 @@ def fullShelf(server_list={}):
             if settings.get_setting('homeshelf') == '1' or settings.get_setting('homeshelf') == '2':
 
                 tree = server_details.get_ondeck(section=section.get_key(),size=15)
-
-                libraryuuid = tree.get("librarySectionUUID",'').encode('utf-8')
-
                 if tree is None:
                     print ("PLEXBMC -> OnDeck items not found on: " + server_details.get_url_location(), False)
                     continue
 
+                libraryuuid = tree.get("librarySectionUUID",'').encode('utf-8')
                 for eachitem in tree:
                     ondeck_list.append((eachitem, server_details, libraryuuid))
 
@@ -3087,7 +3086,6 @@ def fullShelf(server_list={}):
             title_thumb = getShelfThumb(media,source_server)
 
             if media.get('duration') > 0:
-                #movie_runtime = media.get('duration', '0')
                 movie_runtime = str(int(float(media.get('duration'))/1000/60))
             else:
                 movie_runtime = ""
@@ -3341,7 +3339,7 @@ def displayContent( acceptable_level, content_level ):
                   'A' : 2 }       # CAN - Adults
 
     if content_level is None or content_level == "None":
-        printDebug.debug("Setting [None] rating as %s" % ( settings.get_setting('contentNone') , ))
+        printDebug.debug("Setting [None] rating as %s" % settings.get_setting('contentNone') )
         if content_map[settings.get_setting('contentNone')] <= content_map[acceptable_level]:
             printDebug.debug("OK to display")
             return True
@@ -4050,6 +4048,8 @@ def start_plexbmc():
     elif command == "switchuser":
         if switch_user():
             clear_skin_sections()
+            clearOnDeckShelf()
+            clearShelf()
             WINDOW = xbmcgui.Window(10000)
             WINDOW.setProperty("plexbmc.plexhome_user" , str(plex_network.get_myplex_user()))
             WINDOW.setProperty("plexbmc.plexhome_avatar" , str(plex_network.get_myplex_avatar()))
@@ -4070,8 +4070,10 @@ def start_plexbmc():
             plex_network.signout()
             WINDOW = xbmcgui.Window(10000)
             WINDOW.clearProperty("plexbmc.plexhome_user" )
-            WINDOW.clearProperty("plexbmc.plexhome_avatar" )            
+            WINDOW.clearProperty("plexbmc.plexhome_avatar" )
             clear_skin_sections()
+            clearOnDeckShelf()
+            clearShelf()            
             xbmc.executebuiltin("ReloadSkin()")
 
     elif command == "signin":
