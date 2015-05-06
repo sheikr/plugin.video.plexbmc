@@ -378,12 +378,12 @@ def displaySections( filter=None, display_shared=False ):
 
 def enforceSkinView(mode):
 
-    '''
+    """
     Ensure that the views are consistance across plugin usage, depending
     upon view selected by user
     @input: User view selection
     @return: view id for skin
-    '''
+    """
 
     printDebug.debug("== ENTER ==")
 
@@ -892,12 +892,12 @@ def TVEpisodes( url, tree=None ):
     xbmcplugin.endOfDirectory(pluginhandle,cacheToDisc=settings.get_setting('kodicache'))
 
 def getAudioSubtitlesMedia( server, tree, full=False ):
-    '''
+    """
         Cycle through the Parts sections to find all "selected" audio and subtitle streams
         If a stream is marked as selected=1 then we will record it in the dict
         Any that are not, are ignored as we do not need to set them
         We also record the media locations for playback decision later on
-    '''
+    """
     printDebug.debug("== ENTER ==")
     printDebug.debug("Gather media stream info" )
 
@@ -1213,10 +1213,10 @@ def playLibraryMedia( vids, override=False, force=None, full_data=False, shelf=F
     return
 
 def setAudioSubtitles( stream ):
-    '''
+    """
         Take the collected audio/sub stream data and apply to the media
         If we do not have any subs then we switch them off
-    '''
+    """
 
     printDebug.debug("== ENTER ==")
 
@@ -1561,11 +1561,11 @@ def get_params( paramstring ):
     return param
 
 def channelSearch (url, prompt):
-    '''
+    """
         When we encounter a search request, branch off to this function to generate the keyboard
         and accept the terms.  This URL is then fed back into the correct function for
         onward processing.
-    '''
+    """
     printDebug.debug("== ENTER ==")
 
     if prompt:
@@ -1584,13 +1584,13 @@ def channelSearch (url, prompt):
     return
 
 def getContent( url ):
-    '''
+    """
         This function takes teh URL, gets the XML and determines what the content is
         This XML is then redirected to the best processing function.
         If a search term is detected, then show keyboard and run search query
         @input: URL of XML page
         @return: nothing, redirects to another function
-    '''
+    """
     printDebug.debug("== ENTER ==")
 
     server=plex_network.get_server_from_url(url)
@@ -1697,11 +1697,11 @@ def getMasterServer(all=False):
     return possibleServers[0]
 
 def artist( url, tree=None ):
-    '''
+    """
         Process artist XML and display data
         @input: url of XML page, or existing tree of XML page
         @return: nothing
-    '''
+    """
     printDebug.debug("== ENTER ==")
     xbmcplugin.setContent(pluginhandle, 'artists')
     xbmcplugin.addSortMethod(pluginhandle, 37 ) #maintain original plex sorted
@@ -1840,13 +1840,13 @@ def getXML (url, tree=None):
     return tree
 
 def PlexPlugins(url, tree=None):
-    '''
+    """
         Main function to parse plugin XML from PMS
         Will create dir or item links depending on what the
         main tag is.
         @input: plugin page URL
         @return: nothing, creates XBMC GUI listing
-    '''
+    """
     printDebug.debug("== ENTER ==")
     xbmcplugin.setContent(pluginhandle, 'addons')
     server=plex_network.get_server_from_url(url)
@@ -1922,13 +1922,13 @@ def PlexPlugins(url, tree=None):
     xbmcplugin.endOfDirectory(pluginhandle,cacheToDisc=settings.get_setting('kodicache'))
 
 def channelSettings ( url, settingID ):
-    '''
+    """
         Take the setting XML and parse it to create an updated
         string with the new settings.  For the selected value, create
         a user input screen (text or list) to update the setting.
         @ input: url
         @ return: nothing
-    '''
+    """
     printDebug.debug("== ENTER ==")
     printDebug.debug("Setting preference for ID: %s" % settingID )
 
@@ -1999,13 +1999,13 @@ def channelSettings ( url, settingID ):
     return False
 
 def processXML( url, tree=None ):
-    '''
+    """
         Main function to parse plugin XML from PMS
         Will create dir or item links depending on what the
         main tag is.
         @input: plugin page URL
         @return: nothing, creates XBMC GUI listing
-    '''
+    """
     printDebug.debug("== ENTER ==")
     xbmcplugin.setContent(pluginhandle, 'movies')
     server=plex_network.get_server_from_url(url)
@@ -2141,11 +2141,11 @@ def movieTag(url, server, tree, movie, randomNumber):
     return
 
 def getMediaData ( tag_dict ):
-    '''
+    """
         Extra the media details from the XML
         @input: dict of <media /> tag attributes
         @output: dict of required values
-    '''
+    """
     printDebug.debug("== ENTER ==")
 
     return     {'VideoResolution'    : tag_dict.get('videoResolution','') ,
@@ -2335,11 +2335,11 @@ def music( url, tree=None ):
     xbmcplugin.endOfDirectory(pluginhandle,cacheToDisc=settings.get_setting('kodicache'))
 
 def getThumb(data, server, width=720, height=720):
-    '''
+    """
         Simply take a URL or path and determine how to format for images
         @ input: elementTree element, server name
         @ return formatted URL
-    '''
+    """
 
     if settings.get_setting('skipimages'):
         return ''
@@ -2358,11 +2358,11 @@ def getThumb(data, server, width=720, height=720):
     return GENERIC_THUMBNAIL
 
 def getShelfThumb(data, server, seasonThumb=False, prefer_season=False, width=400, height=400):
-    '''
+    """
         Simply take a URL or path and determine how to format for images
         @ input: elementTree element, server name
         @ return formatted URL
-    '''
+    """
 
     if seasonThumb:
         if prefer_season:
@@ -2384,11 +2384,11 @@ def getShelfThumb(data, server, seasonThumb=False, prefer_season=False, width=40
     return GENERIC_THUMBNAIL
 
 def getFanart(data, server, width=1280, height=720):
-    '''
+    """
         Simply take a URL or path and determine how to format for fanart
         @ input: elementTree element, server name
         @ return formatted URL for photo resizing
-    '''
+    """
     if settings.get_setting('skipimages'):
         return ''
 
@@ -3280,13 +3280,12 @@ def fullShelf(server_list={}):
     clearOnDeckShelf(ondeckMovieCount, ondeckSeasonCount)
 
 def displayContent( acceptable_level, content_level ):
-
-    '''
+    """
         Takes a content Rating and decides whether it is an allowable
         level, as defined by the content filter
         @input: content rating
         @output: boolean
-    '''
+    """
 
     printDebug.info("Checking rating flag [%s] against [%s]" % (content_level, acceptable_level))
 
@@ -3654,7 +3653,6 @@ def shelfChannel(server_list = None):
     return
 
 def clearChannelShelf (channelCount=0):
-
     WINDOW = xbmcgui.Window( 10000 )
 
     try:
@@ -3668,7 +3666,6 @@ def clearChannelShelf (channelCount=0):
     return
 
 def clearQueueShelf (queueCount=0):
-
     WINDOW = xbmcgui.Window( 10000 )
 
     try:
@@ -3734,10 +3731,10 @@ def deleteMedia( server_uuid, metadata_id ):
     return True
 
 def alterSubs ( server_uuid, metadata_id ):
-    '''
+    """
         Display a list of available Subtitle streams and allow a user to select one.
         The currently selected stream will be annotated with a *
-    '''
+    """
     printDebug.debug("== ENTER ==")
 
     server = plex_network.get_server_from_uuid(server_uuid)
@@ -3787,10 +3784,10 @@ def alterSubs ( server_uuid, metadata_id ):
     return True
 
 def alterAudio ( server_uuid, metadata_id ):
-    '''
+    """
         Display a list of available audio streams and allow a user to select one.
         The currently selected stream will be annotated with a *
-    '''
+    """
     printDebug.debug("== ENTER ==")
 
     server = plex_network.get_server_from_uuid(server_uuid)
