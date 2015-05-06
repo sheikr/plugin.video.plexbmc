@@ -1,5 +1,5 @@
 """
-PlexGDM.py - Version 0.2
+PlexGDM.py - Version 1.0
 
 This class implements the Plex GDM (G'Day Mate) protocol to discover
 local Plex Media Servers.  Also allow client registration into all local
@@ -58,7 +58,7 @@ class plexgdm:
         self.__printDebug=printDebug("PleXBMC", "PlexGDM")
 
     def clientDetails(self, c_id, c_name, c_post, c_product, c_version):
-        self.client_data = "Content-Type: plex/media-player\nResource-Identifier: %s\nName: %s\nPort: %s\nProduct: %s\nVersion: %s" % ( c_id, c_name, c_post, c_product, c_version )
+        self.client_data = "Content-Type: plex/media-player\r\nResource-Identifier: %s\r\nName: %s\r\nPort: %s\r\nProduct: %s\r\nVersion: %s\r\nProtocol: plex\r\nProtocol-Version: 1\r\nProtocol-Capabilities: navigation,playback,timeline\r\nDevice-Class: HTPC" % ( c_id, c_name, c_post, c_product, c_version )
         self.client_id = c_id
 
     def getClientDetails(self):
@@ -86,11 +86,11 @@ class plexgdm:
         update_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
         status = update_sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton(self._multicast_address) + socket.inet_aton('0.0.0.0'))
         update_sock.setblocking(0)
-        self.__printDebug("Sending registration data: HELLO %s\n%s" % (self.client_header, self.client_data), 3)
+        self.__printDebug("Sending registration data: HELLO %s\r\n%s" % (self.client_header, self.client_data), 3)
 
         #Send initial client registration
         try:
-            update_sock.sendto("HELLO %s\n%s" % (self.client_header, self.client_data), self.client_register_group)
+            update_sock.sendto("HELLO %s\r\n%s" % (self.client_header, self.client_data), self.client_register_group)
         except:
             self.__printDebug( "Error: Unable to send registration message" , 0)
 
@@ -98,27 +98,27 @@ class plexgdm:
         while self._registration_is_running:
             try:
                 data, addr = update_sock.recvfrom(1024)
-                self.__printDebug("Received UDP packet from [%s] containing [%s]" % (addr, data.strip()), 3)
+                self.__printDebug("Recieved UDP packet from [%s] containing [%s]" % (addr, data.strip()), 3)
             except socket.error, e:
                 pass
             else:
                 if "M-SEARCH * HTTP/1." in data:
                     self.__printDebug("Detected client discovery request from %s.  Replying" % ( addr ,) , 2)
                     try:
-                        update_sock.sendto("HTTP/1.0 200 OK\n%s" % self.client_data, addr)
+                        update_sock.sendto("HTTP/1.0 200 OK\r\n%s" % self.client_data, addr)
                     except:
                         self.__printDebug( "Error: Unable to send client update message",0)
 
-                    self.__printDebug("Sending registration data: HTTP/1.0 200 OK\n%s" % (self.client_data), 3)
+                    self.__printDebug("Sending registration data: HTTP/1.0 200 OK\r\n%s" % (self.client_data), 3)
                     self.client_registered = True
             time.sleep(0.5)        
 
         self.__printDebug("Client Update loop stopped",1)
 
         #When we are finished, then send a final goodbye message to de-register cleanly.
-        self.__printDebug("Sending registration data: BYE %s\n%s" % (self.client_header, self.client_data), 3)
+        self.__printDebug("Sending registration data: BYE %s\r\n%s" % (self.client_header, self.client_data), 3)
         try:
-            update_sock.sendto("BYE %s\n%s" % (self.client_header, self.client_data), self.client_register_group)
+            update_sock.sendto("BYE %s\r\n%s" % (self.client_header, self.client_data), self.client_register_group)
         except:
             self.__printDebug( "Error: Unable to send client update message" ,0)
 
@@ -177,11 +177,15 @@ class plexgdm:
                 try:
                     data, server = sock.recvfrom(1024)
                     self.__printDebug("Received data from %s, %s" % server, 3)
-                    self.__printDebug("Data received is:\n %s" % data, 3)
+                    self.__printDebug("Data received is:\r\n %s" % data, 3)
                     returnData.append( { 'from' : server,
                                          'data' : data } )
                 except socket.timeout:
                     break
+        except:
+            # if we can't send our discovery query, just abort and try again
+            # on the next loop
+            return
         finally:
             sock.close()
 
@@ -197,13 +201,13 @@ class plexgdm:
                 #Check if we had a positive HTTP response                        
                 if "200 OK" in response.get('data'):
 
-                    update['discovery'] = "auto"
-                    update['owned']='1'
-                    update['master']= 1
-                    update['role']='master'
-                    update['class']=None
+                    for each in response.get('data').split('\r\n'):
 
-                    for each in response.get('data').split('\n'):
+                        update['discovery'] = "auto"
+                        update['owned']='1'
+                        update['master']= 1
+                        update['role']='master'
+                        update['class']=None
 
                         if "Content-Type:" in each:
                             update['content-type'] = each.split(':')[1].strip()
