@@ -61,7 +61,7 @@ if not settings.get('plexbmc_version', False):
     xbmc.executebuiltin("XBMC.Notification(PleXBMC Helper: PleXBMC not installed,)")
 else:
     # Start GDM for server/client discovery
-    client=plexgdm.plexgdm(debug=settings['gdm_debug'])
+    client=plexgdm.plexgdm(debug=settings['debug'])
     client.clientDetails(settings['uuid'], settings['client_name'], settings['myport'], "PleXBMC" , settings.get('plexbmc_version', '1.0'))
     printDebug("PleXBMC Helper -> registration string is: %s " % client.getClientDetails() )
     

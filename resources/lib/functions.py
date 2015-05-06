@@ -6,6 +6,9 @@ import traceback
 import xbmc
 from helper_settings import settings
 from httppersist import requests
+from common import printDebug
+
+printDebug = printDebug('PleXBMC', 'Helper')
 
 def xbmc_photo():
     return "photo"
@@ -53,13 +56,6 @@ def getPlatform():
     elif xbmc.getCondVisibility('system.platform.android'): 
         return "Android"
     return "Unknown"
-    
-def printDebug( msg, functionname=True ):
-    if settings['debug']:
-        if functionname is False:
-            print str(msg)
-        else:
-            print "PleXBMC Helper -> " + inspect.stack()[1][3] + ": " + str(msg)
             
 """ communicate with XBMC """
 def jsonrpc(action, arguments = {}):

@@ -21,20 +21,15 @@ def getGUI(name):
 addon = xbmcaddon.Addon()
 plexbmc = xbmcaddon.Addon('plugin.video.plexbmc')
 
-settings['debug'] = addon.getSetting('debug') == "true"
-settings['gdm_debug'] = addon.getSetting('gdm_debug') == "true"
-if addon.getSetting('use_xbmc_name') == "true":
-    settings['client_name'] = getGUI('devicename')
-else:
-    settings['client_name'] = addon.getSetting('c_name')
+settings['debug'] = addon.getSetting('debug')
+settings['client_name'] = addon.getSetting('devicename')
 # XBMC web server settings
 settings['webserver_enabled'] = (getGUI('webserver') == "true")
 settings['port'] = int(getGUI('webserverport'))
 settings['user'] = getGUI('webserverusername')
 settings['passwd'] = getGUI('webserverpassword')
 
-settings['uuid'] = str(addon.getSetting('uuid')) or str(uuid.uuid4())
-addon.setSetting('uuid', settings['uuid'])
+settings['uuid'] = addon.getSetting('client_id')
 settings['version'] = addon.getAddonInfo('version')
 settings['plexbmc_version'] = plexbmc.getAddonInfo('version')
 settings['myplex_user'] = plexbmc.getSetting('myplex_user')
