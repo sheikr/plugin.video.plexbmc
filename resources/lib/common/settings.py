@@ -1,13 +1,14 @@
 import xbmcaddon
 
-class addonSettings:
+
+class AddonSettings:
 
     def __init__(self, name):
         print "PleXBMC -> Reading settings configuration"
         self.settings = xbmcaddon.Addon(name)
         self.stream = self.settings.getSetting('streaming')
 
-    def openSettings(self):
+    def open_settings(self):
         return self.settings.openSettings()
 
     def get_setting(self, name):
@@ -36,9 +37,9 @@ class addonSettings:
         return int(self.settings.getSetting('debug'))
 
     def set_setting(self, name, value):
-        if value == True:
+        if value:
             value = "true"
-        elif value == False:
+        elif not value:
             value = "false"
 
         self.settings.setSetting(name,value)
@@ -55,7 +56,7 @@ class addonSettings:
     def set_stream(self,value):
         self.stream = value
 
-    def dumpSettings(self):
+    def dump_settings(self):
         return self.__dict__
 
     def update_master_server(self, value):

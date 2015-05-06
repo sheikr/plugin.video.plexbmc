@@ -8,8 +8,17 @@ import re
 
 
 class printDebug:
-    def __init__(self, main, sub=None):
+    DEBUG_OFF = 0
+    DEBUG_INFO = 1
+    DEBUG_DEBUG = 2
+    DEBUG_DEBUGPLUS = 3
 
+    DEBUG_MAP = {DEBUG_OFF: "off",
+                 DEBUG_INFO: "info",
+                 DEBUG_DEBUG: "debug",
+                 DEBUG_DEBUGPLUS: "debug+"}
+
+    def __init__(self, main, sub=None):
         self.main = main
         if sub:
             self.sub = "." + sub
@@ -17,18 +26,8 @@ class printDebug:
             self.sub = ''
 
         self.level = settings.get_debug()
-
-        self.DEBUG_OFF = 0
-        self.DEBUG_INFO = 1
-        self.DEBUG_DEBUG = 2
-        self.DEBUG_DEBUGPLUS = 3
         self.token_regex = re.compile('-Token=[a-z|0-9].*[&|$]')
         self.ip_regex = re.compile('\.\d{1,3}\.\d{1,3}\.')
-
-        self.DEBUG_MAP = {self.DEBUG_OFF: "off",
-                          self.DEBUG_INFO: "info",
-                          self.DEBUG_DEBUG: "debug",
-                          self.DEBUG_DEBUGPLUS: "debug+"}
 
     def get_name(self, level):
         return self.DEBUG_MAP[level]
@@ -118,9 +117,9 @@ GLOBAL_SETUP = setup_python_locations()
 GLOBAL_SETUP['platform'] = get_platform()
 GENERIC_THUMBNAIL = "%s/resource/thumb.png" % GLOBAL_SETUP['__cwd__']
 REQUIRED_REVISION = "1.0.7"
-from settings import addonSettings
+from settings import AddonSettings
 
-settings = addonSettings('plugin.video.plexbmc')
+settings = AddonSettings('plugin.video.plexbmc')
 
 # Get the setting from the appropriate file.
 MODE_GETCONTENT = 0
