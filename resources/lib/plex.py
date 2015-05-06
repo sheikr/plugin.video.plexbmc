@@ -17,8 +17,7 @@ DEFAULT_PORT = "32400"
 
 class Plex:
     def __init__(self, load=False):
-
-        # Provide an interface into Plex 
+        # Provide an interface into Plex
         self.cache = CacheControl(GLOBAL_SETUP['__cachedir__'] + "cache/servers", settings.get_setting('cache'))
         self.myplex_server = 'https://plex.tv'
         self.myplex_user = None
@@ -582,9 +581,9 @@ class Plex:
         tree = etree.fromstring(data)
 
         if tree.get('status') == "unauthorized":
-            return (False, "Unauthorised")
+            return False, "Unauthorised"
         elif tree.get('status') == "error":
-            return (False, "Unknown error")
+            return False, "Unknown error"
         else:
             username = None
             for users in self.user_list.values():
@@ -603,9 +602,9 @@ class Plex:
             self.plexhome_settings['plexhome_user_cache'] = "%s|%s" % (username, token)
             self.effective_user = username
             self.save_tokencache()
-            return (True, None)
+            return True, None
 
-        return (False, "Error")
+        return False, "Error"
 
     def is_admin(self):
         if self.effective_user == self.myplex_user:
