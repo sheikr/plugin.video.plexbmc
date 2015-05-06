@@ -30,12 +30,12 @@ import urlparse
 import time
 import random
 import datetime
-from common import *
 
+from common import *
 import xbmcplugin
 import xbmcgui
 
-import plex
+from plexserver import plex_network
 
 
 def media_type(part_data, server, dvd_playback=False):
@@ -4000,7 +4000,6 @@ else:
     print "PleXBMC -> Debug is turned off.  Running silent"
 
 pluginhandle = 0
-plex_network=plex.Plex(load=False)
 
 
 def start_plexbmc():
@@ -4050,8 +4049,8 @@ def start_plexbmc():
             clearOnDeckShelf()
             clearShelf()
             WINDOW = xbmcgui.Window(10000)
-            WINDOW.setProperty("plexbmc.plexhome_user" , str(plex_network.get_myplex_user()))
-            WINDOW.setProperty("plexbmc.plexhome_avatar" , str(plex_network.get_myplex_avatar()))
+            WINDOW.setProperty("plexbmc.plexhome_user", str(plex_network.get_myplex_user()))
+            WINDOW.setProperty("plexbmc.plexhome_avatar", str(plex_network.get_myplex_avatar()))
             if xbmcgui.getCurrentWindowId() == 10000:
                 printDebug.debug("Currently in home - refreshing to allow new settings to be taken")
                 xbmc.executebuiltin("ReloadSkin()")
@@ -4062,9 +4061,13 @@ def start_plexbmc():
 
     elif command == "signout":
         if not plex_network.is_admin():
-            return xbmcgui.Dialog().ok("Sign Out","To sign out you must be logged in as an admin user.  Please switch user and try again")
+            return xbmcgui.Dialog().ok("Sign Out",
+                                       "To sign out you must be logged in as an admin user. \
+                                       Please switch user and try again")
 
-        ret = xbmcgui.Dialog().yesno("myplex","You are currently signed into myPlex. Are you sure you want to sign out?")
+        ret = xbmcgui.Dialog().yesno("myplex",
+                                     "You are currently signed into myPlex. \
+                                     Are you sure you want to sign out?")
         if ret:
             plex_network.signout()
             WINDOW = xbmcgui.Window(10000)
@@ -4076,8 +4079,8 @@ def start_plexbmc():
             xbmc.executebuiltin("ReloadSkin()")
 
     elif command == "signin":
-        import plex_signin
-        signin_window = plex_signin.plex_signin('Myplex Login')
+        from myplex_dialogs import PlexSigninDialog
+        signin_window = PlexSigninDialog('Myplex Login')
         signin_window.set_authentication_target(plex_network)
         signin_window.start()
         del signin_window
@@ -4088,16 +4091,20 @@ def start_plexbmc():
 
     elif command == "managemyplex":
         if not plex_network.is_myplex_signedin():
-            ret = xbmcgui.Dialog().yesno("Manage myplex","You are not currently logged into myplex.  Please continue to sign in, or cancel to return")
+            ret = xbmcgui.Dialog().yesno("Manage myplex",
+                                         "You are not currently logged into myplex.\
+                                         Please continue to sign in, or cancel to return")
             if ret:
                 xbmc.executebuiltin('XBMC.RunScript(plugin.video.plexbmc, signin)')
             else:
                 return
         elif not plex_network.is_admin():
-            return xbmcgui.Dialog().ok("Manage myplex","To access these screens you must be logged in as an admin user.  Please switch user and try again")
+            return xbmcgui.Dialog().ok("Manage myplex",
+                                       "To access these screens you must be logged in as an admin user.\
+                                       Please switch user and try again")
 
-        import plex_signin
-        manage_window = plex_signin.plex_manage('Manage myplex')
+        from myplex_dialogs import PlexManageDialog
+        manage_window = PlexManageDialog('Manage myplex')
         manage_window.set_authentication_target(plex_network)
         manage_window.start()
         del manage_window

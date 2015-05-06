@@ -2,7 +2,6 @@ import xml.etree.ElementTree as etree
 import urlparse
 import urllib
 import time
-import uuid
 import requests
 
 from resources.lib.common import *
@@ -515,7 +514,7 @@ class PlexMediaServer:
 
         fullURL = "%s%s" % (transcode_request, urllib.urlencode(transcode_settings))
         printDebug.debug("Transcoded media location URL: %s" % fullURL)
-        return (session, self.get_formatted_url(fullURL, options={'X-Plex-Device': 'Plex Home Theater'}))
+        return session, self.get_formatted_url(fullURL, options={'X-Plex-Device': 'Plex Home Theater'})
 
     def get_legacy_transcode(self, id, url, identifier=None):
 
@@ -595,4 +594,4 @@ class PlexMediaServer:
 
         printDebug.debug("Transcoded media location URL: %s" % fullURL)
 
-        return (session, fullURL)
+        return session, fullURL

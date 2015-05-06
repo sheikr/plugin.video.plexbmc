@@ -5,7 +5,8 @@ import uuid
 
 import requests
 
-from plexserver import PlexMediaServer, PlexGdm
+from plex_server import PlexMediaServer
+from plex_gdm import PlexGdm
 from common import GLOBAL_SETUP, REQUIRED_REVISION, settings  # const and singletones
 from common import PrintDebug, CacheControl  # types
 from common import is_ip  # shared func
