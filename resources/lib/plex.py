@@ -3,10 +3,10 @@ import base64
 import urlparse
 import uuid
 
-import plexgdm
-from common import *
-import CacheControl
 import requests
+
+import plexgdm
+from resources.lib.common import CacheControl
 from plexserver import PlexMediaServer
 
 
@@ -18,7 +18,7 @@ class Plex:
     def __init__(self, load=False):
 
         # Provide an interface into Plex 
-        self.cache=CacheControl.CacheControl(GLOBAL_SETUP['__cachedir__']+"cache/servers", settings.get_setting('cache'))
+        self.cache= CacheControl.CacheControl(GLOBAL_SETUP['__cachedir__']+"cache/servers", settings.get_setting('cache'))
         self.myplex_server='https://plex.tv'
         self.myplex_user=None
         self.myplex_token=None
