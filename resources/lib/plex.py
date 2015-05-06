@@ -5,11 +5,11 @@ import uuid
 
 import requests
 
-import plexgdm
-from plexserver import PlexMediaServer
+from plexserver import PlexMediaServer, PlexGdm
 from common import GLOBAL_SETUP, REQUIRED_REVISION, settings  # const and singletones
 from common import PrintDebug, CacheControl  # types
 from common import is_ip  # shared func
+
 
 printDebug = PrintDebug("PleXBMC", "plex")
 DEFAULT_PORT = "32400"
@@ -285,12 +285,12 @@ class Plex:
             printDebug.info("local GDM discovery setting enabled.")
             printDebug.info("Attempting GDM lookup on multicast")
             if settings.get_debug() >= printDebug.DEBUG_INFO:
-                GDM_debug = 3
+                gdm_debug_level = 3
             else:
-                GDM_debug = 0
+                gdm_debug_level = 0
 
             try:
-                gdm_client = plexgdm.plexgdm(GDM_debug)
+                gdm_client = PlexGdm(gdm_debug_level)
                 gdm_client.discover()
                 gdm_server_name = gdm_client.getServerList()
             except Exception, e:

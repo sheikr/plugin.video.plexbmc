@@ -3,9 +3,10 @@ import urlparse
 import urllib
 import time
 import uuid
-
-from common import *
 import requests
+
+from resources.lib.common import *
+from plex_section import PlexSection
 
 
 printDebug = PrintDebug("PleXBMC", "plexserver")
@@ -55,17 +56,16 @@ class PlexMediaServer:
         self.best_address = 'address'
         self.plex_identification_header = None
         self.plex_identification_string = None
-        self.update_identification()
+        self.__update_identification()
 
-    def update_identification(self):
-        self.plex_identification_header = self.create_plex_identification()
-        self.plex_identification_string = self.create_plex_identification_string()
+    def __update_identification(self):
+        self.plex_identification_header = self.__create_plex_identification()
+        self.plex_identification_string = self.__create_plex_identification_string()
 
     def get_revision(self):
         return self.__revision
 
     def get_details(self):
-
         return {'serverName': self.server_name,
                 'server': self.get_address(),
                 'port': self.get_port(),
@@ -76,15 +76,14 @@ class PlexMediaServer:
                 'master': self.master,
                 'class': self.class_type}
 
-    def create_plex_identification(self):
-
+    def __create_plex_identification(self):
         headers = {'X-Plex-Device': 'PleXBMC',
                    'X-Plex-Client-Platform': 'KODI',
-                   'X-Plex-Device-Name': self.get_device_name(),
+                   'X-Plex-Device-Name': self.__get_device_name(),
                    'X-Plex-Language': 'en',
                    'X-Plex-Model': 'unknown',
                    'X-Plex-Platform': 'KODI',
-                   'X-Plex-Client-Identifier': self.get_client_identifier(),
+                   'X-Plex-Client-Identifier': self.__get_client_identifier(),
                    'X-Plex-Product': 'PleXBMC',
                    'X-Plex-Platform-Version': GLOBAL_SETUP['platform'],
                    'X-Plex-Version': GLOBAL_SETUP['__version__'],
@@ -98,14 +97,14 @@ class PlexMediaServer:
 
         return headers
 
-    def create_plex_identification_string(self):
+    def __create_plex_identification_string(self):
         header = []
-        for key, value in self.create_plex_identification().items():
+        for key, value in self.__create_plex_identification().items():
             header.append("%s=%s" % (key, urllib.quote(value)))
 
         return "&".join(header)
 
-    def get_client_identifier(self):
+    def __get_client_identifier(self):
         if self.client_id is None:
             self.client_id = settings.get_setting('client_id')
 
@@ -115,7 +114,7 @@ class PlexMediaServer:
 
         return self.client_id
 
-    def get_device_name(self):
+    def __get_device_name(self):
         if self.device_name is None:
             self.device_name = settings.get_setting('devicename')
         return self.device_name
@@ -212,11 +211,11 @@ class PlexMediaServer:
 
     def set_token(self, value):
         self.token = value
-        self.update_identification()
+        self.__update_identification()
 
     def set_user(self, value):
         self.user = value
-        self.update_identification()
+        self.__update_identification()
 
     def set_class(self, value):
         self.class_type = value
@@ -224,7 +223,7 @@ class PlexMediaServer:
     def set_master(self, value):
         self.master = value
 
-    def talk(self, url='/', refresh=False, type='get'):
+    def __talk(self, url='/', refresh=False, type='get'):
 
         if not self.offline or refresh:
             printDebug.info("URL is: %s" % url)
@@ -268,11 +267,11 @@ class PlexMediaServer:
 
         return '<?xml version="1.0" encoding="UTF-8"?><message status="offline"></message>'
 
-    def tell(self, url, refresh=False):
-        return self.talk(url, refresh, type='put')
+    def __tell(self, url, refresh=False):
+        return self.__talk(url, refresh, type='put')
 
     def refresh(self):
-        data = self.talk(refresh=True)
+        data = self.__talk(refresh=True)
 
         tree = etree.fromstring(data)
 
@@ -296,7 +295,7 @@ class PlexMediaServer:
 
     def discover_sections(self):
         for section in self.processed_xml("/library/sections"):
-            self.section_list.append(plex_section(section))
+            self.section_list.append(PlexSection(section))
         return
 
     def get_recently_added(self, section=-1, start=0, size=0, hide_watched=True):
@@ -344,7 +343,7 @@ class PlexMediaServer:
             if url_parts.query:
                 url = "%s?%s" % (url, url_parts.query)
 
-        data = self.talk(url)
+        data = self.__talk(url)
         start_time = time.time()
         tree = etree.fromstring(data)
         printDebug.info(
@@ -362,7 +361,7 @@ class PlexMediaServer:
 
         start_time = time.time()
 
-        data = self.talk(url)
+        data = self.__talk(url)
 
         printDebug.info("PROCESSING: it took %.2f seconds to process data from %s" % (
         (time.time() - start_time), self.get_address()))
@@ -443,7 +442,7 @@ class PlexMediaServer:
         return section.get_art()
 
     def stop_transcode_session(self, session):
-        self.talk('/video/:/transcode/segmented/stop?session=%s' % session)
+        self.__talk('/video/:/transcode/segmented/stop?session=%s' % session)
         return
 
     def report_playback_progress(self, id, time, state='playing', duration=0):
@@ -454,33 +453,33 @@ class PlexMediaServer:
         except:
             pass
 
-        self.talk(
+        self.__talk(
             '/:/timeline?duration=%s&guid=com.plexapp.plugins.library&key=/library/metadata/%s&ratingKey=%s&state=%s&time=%s' % (
             duration, id, id, state, time))
         return
 
     def mark_item_watched(self, id):
-        self.talk('/:/scrobble?key=%s&identifier=com.plexapp.plugins.library' % id)
+        self.__talk('/:/scrobble?key=%s&identifier=com.plexapp.plugins.library' % id)
         return
 
     def mark_item_unwatched(self, id):
-        self.talk('/:/unscrobble?key=%s&identifier=com.plexapp.plugins.library' % id)
+        self.__talk('/:/unscrobble?key=%s&identifier=com.plexapp.plugins.library' % id)
         return
 
     def refresh_section(self, key):
-        return self.talk('/library/sections/%s/refresh' % key)
+        return self.__talk('/library/sections/%s/refresh' % key)
 
     def get_metadata(self, id):
         return self.processed_xml('/library/metadata/%s' % id)
 
     def set_audio_stream(self, part_id, stream_id):
-        return self.tell("/library/parts/%s?audioStreamID=%s" % (part_id, stream_id))
+        return self.__tell("/library/parts/%s?audioStreamID=%s" % (part_id, stream_id))
 
     def set_subtitle_stream(self, part_id, stream_id):
-        return self.tell("/library/parts/%s?subtitleStreamID=%s" % (part_id, stream_id))
+        return self.__tell("/library/parts/%s?subtitleStreamID=%s" % (part_id, stream_id))
 
     def delete_metadata(self, id):
-        return self.talk('/library/metadata/%s' % id, type='delete')
+        return self.__talk('/library/metadata/%s' % id, type='delete')
 
     def get_universal_transcode(self, url):
         # Check for myplex user, which we need to alter to a master server
@@ -597,79 +596,3 @@ class PlexMediaServer:
         printDebug.debug("Transcoded media location URL: %s" % fullURL)
 
         return (session, fullURL)
-
-
-class plex_section:
-    def __init__(self, data=None):
-
-        self.title = None
-        self.sectionuuid = None
-        self.path = None
-        self.key = None
-        self.art = None
-        self.type = None
-        self.location = "local"
-
-        if data is not None:
-            self.populate(data)
-
-    def populate(self, data):
-
-        path = data.get('key')
-        if not path[0] == "/":
-            path = '/library/sections/%s' % path
-
-        self.title = data.get('title', 'Unknown').encode('utf-8')
-        self.sectionuuid = data.get('uuid', '')
-        self.path = path.encode('utf-8')
-        self.key = data.get('key')
-        self.art = data.get('art', '').encode('utf-8')
-        self.type = data.get('type', '')
-
-    def get_details(self):
-
-        return {'title': self.title,
-                'sectionuuid': self.sectionuuid,
-                'path': self.path,
-                'key': self.key,
-                'location': self.local,
-                'art': self.art,
-                'type': self.type}
-
-    def get_title(self):
-        return self.title
-
-    def get_uuid(self):
-        return self.sectionuuid
-
-    def get_path(self):
-        return self.path
-
-    def get_key(self):
-        return self.key
-
-    def get_art(self):
-        return self.art
-
-    def get_type(self):
-        return self.type
-
-    def is_show(self):
-        if self.type == 'show':
-            return True
-        return False
-
-    def is_movie(self):
-        if self.type == 'movie':
-            return True
-        return False
-
-    def is_artist(self):
-        if self.type == 'artist':
-            return True
-        return False
-
-    def is_photo(self):
-        if self.type == 'photo':
-            return True
-        return False

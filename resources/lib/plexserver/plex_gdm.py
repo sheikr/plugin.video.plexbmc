@@ -29,10 +29,10 @@ import threading
 import time
 import urllib2
 
-from common import *
+from resources.lib.common import *
 
 
-class plexgdm:
+class PlexGdm:
     def __init__(self, debug=0):
 
         self.discover_message = 'M-SEARCH * HTTP/1.0'
@@ -296,7 +296,7 @@ class plexgdm:
 
 # Example usage
 if __name__ == '__main__':
-    client = plexgdm(debug=3)
+    client = PlexGdm(debug=3)
     client.clientDetails("Test-Name", "Test Client", "3003", "Test-App", "1.2.3")
     client.start_all()
     while not client.discovery_complete:
