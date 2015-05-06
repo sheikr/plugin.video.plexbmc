@@ -4112,10 +4112,10 @@ def start_plexbmc():
         # Populate Skin variables
         if command == "skin":
             try:
-                type = sys.argv[2]
+                skin_type = sys.argv[2]
             except:
-                type = None
-            skin(type=type)
+                skin_type = None
+            skin(type=skin_type)
 
         elif command == "amberskin":
             amberskin()
