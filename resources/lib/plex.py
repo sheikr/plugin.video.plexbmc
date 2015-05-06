@@ -6,8 +6,8 @@ import uuid
 import requests
 
 import plexgdm
-from common import CacheControl
-from common import *
+from common.CacheControl import CacheControl
+from common.common import *
 from plexserver import PlexMediaServer
 
 printDebug = PrintDebug("PleXBMC", "plex")
@@ -18,7 +18,7 @@ class Plex:
     def __init__(self, load=False):
 
         # Provide an interface into Plex 
-        self.cache = CacheControl.CacheControl(GLOBAL_SETUP['__cachedir__'] + "cache/servers", settings.get_setting('cache'))
+        self.cache = CacheControl(GLOBAL_SETUP['__cachedir__'] + "cache/servers", settings.get_setting('cache'))
         self.myplex_server = 'https://plex.tv'
         self.myplex_user = None
         self.myplex_token = None
@@ -69,9 +69,6 @@ class Plex:
             code = xml.find('code').text
             identifier = xml.find('id').text
         except:
-            code = None
-
-        if code is None:
             printDebug("Error, no code provided")
             code = "----"
             identifier = "error"
