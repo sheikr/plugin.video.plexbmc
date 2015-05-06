@@ -7,7 +7,7 @@ import socket
 import re
 
 
-class printDebug:
+class PrintDebug:
     DEBUG_OFF = 0
     DEBUG_INFO = 1
     DEBUG_DEBUG = 2
@@ -91,7 +91,7 @@ def wake_servers():
 
 
 def setup_python_locations():
-    setup = {}
+    setup = dict()
     setup['__addon__'] = xbmcaddon.Addon()
     setup['__cachedir__'] = setup['__addon__'].getAddonInfo('profile')
     setup['__cwd__'] = xbmc.translatePath(setup['__addon__'].getAddonInfo('path')).decode('utf-8')
@@ -103,7 +103,7 @@ def setup_python_locations():
 
 
 def is_ip(address):
-    '''from http://www.seanelavelle.com/2012/04/16/checking-for-a-valid-ip-in-python/'''
+    """from http://www.seanelavelle.com/2012/04/16/checking-for-a-valid-ip-in-python/"""
     try:
         socket.inet_aton(address)
         ip = True

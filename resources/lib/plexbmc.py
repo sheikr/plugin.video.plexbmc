@@ -1,4 +1,4 @@
-'''
+"""
     @document   : plexbmc.py
     @package    : PleXBMC add-on
     @author     : Hippojay (aka Dave Hawes-Johnson)
@@ -23,7 +23,7 @@
     You should have received a copy of the GNU General Public License
     along with PleXBMC Plugin.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
+"""
 
 import urllib
 import urlparse
@@ -33,7 +33,7 @@ import datetime
 
 import xbmcplugin
 import xbmcgui
-from resources.lib.common import *  #Needed first to setup import locations
+from common import *  #Needed first to setup import locations
 import plex
 
 
@@ -3965,7 +3965,7 @@ def switch_user():
     return True 
 
 ##So this is where we really start the addon 
-printDebug=printDebug("PleXBMC")
+printDebug=PrintDebug("PleXBMC")
 
 print "PleXBMC -> Running PleXBMC: %s " % GLOBAL_SETUP['__version__']
 

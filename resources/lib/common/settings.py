@@ -2,7 +2,6 @@ import xbmcaddon
 
 
 class AddonSettings:
-
     def __init__(self, name):
         print "PleXBMC -> Reading settings configuration"
         self.settings = xbmcaddon.Addon(name)
@@ -27,11 +26,11 @@ class AddonSettings:
     def get_debug(self):
         if self.settings.getSetting('debug') == 'true':
             print "PLEXBMC < 3.6 debug setting detected - settings must be re-saved"
-            self.settings.setSetting('debug','2')
+            self.settings.setSetting('debug', '2')
             return 2
         elif self.settings.getSetting('debug') == 'false':
             print "PLEXBMC < 3.6 debug setting detected - settings must be re-saved"
-            self.settings.setSetting('debug','1')
+            self.settings.setSetting('debug', '1')
             return 0
 
         return int(self.settings.getSetting('debug'))
@@ -42,18 +41,18 @@ class AddonSettings:
         elif not value:
             value = "false"
 
-        self.settings.setSetting(name,value)
+        self.settings.setSetting(name, value)
 
     def get_wakeservers(self):
-        wakeserver=[]
-        for servers in range(1,12):
+        wakeserver = []
+        for servers in range(1, 12):
             wakeserver.append(self.settings.getSetting('wol%s' % servers))
         return wakeserver
 
     def get_stream(self):
         return self.stream
 
-    def set_stream(self,value):
+    def set_stream(self, value):
         self.stream = value
 
     def dump_settings(self):
@@ -61,4 +60,4 @@ class AddonSettings:
 
     def update_master_server(self, value):
         print "Updating master server to%s" % value
-        self.settings.setSetting('masterServer','%s' % value)
+        self.settings.setSetting('masterServer', '%s' % value)
