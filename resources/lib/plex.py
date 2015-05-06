@@ -1,15 +1,14 @@
-import sys
-import os
 import xml.etree.ElementTree as etree
 import base64
+import urlparse
+import uuid
+
 import plexgdm
-from settings import addonSettings
 from common import *
 import CacheControl
 import requests
 from plexserver import PlexMediaServer
-import urlparse
-import uuid
+
 
 printDebug=printDebug("PleXBMC", "plex")
 DEFAULT_PORT="32400"

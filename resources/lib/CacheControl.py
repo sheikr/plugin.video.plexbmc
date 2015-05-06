@@ -9,8 +9,10 @@ Implementation of file based caching for python objects.
 Utilises pickle to store object data as file within the KODI virtual file system.
 
 '''
-import xbmcvfs
 import time
+
+import xbmcvfs
+
 try:
     import cPickle as pickle
 except ImportError:

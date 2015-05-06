@@ -27,19 +27,15 @@
 
 import urllib
 import urlparse
-import re
-import xbmcplugin
-import xbmcgui
-import httplib
-import socket
-import sys
-import os
 import time
 import random
-import xbmc
 import datetime
-from common import *  #Needed first to setup import locations
+
+import xbmcplugin
+import xbmcgui
+from resources.lib.common import *  #Needed first to setup import locations
 import plex
+
 
 def mediaType( partData, server, dvdplayback=False ):
     stream=partData['key']

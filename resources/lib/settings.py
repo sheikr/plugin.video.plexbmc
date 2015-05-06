@@ -1,4 +1,3 @@
-import os
 import xbmcaddon
 
 class addonSettings:

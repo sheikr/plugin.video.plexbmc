@@ -23,14 +23,13 @@ MA 02110-1301, USA.
 
 __author__ = 'DHJ (hippojay) <plex@h-jay.com>'
 
-import socket
 import struct
-import sys
-import re
 import threading
 import time
 import urllib2
-from common import *
+
+from resources.lib.common import *
+
 
 class plexgdm:
 

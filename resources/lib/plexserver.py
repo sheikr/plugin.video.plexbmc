@@ -1,14 +1,12 @@
-import sys
-import os
 import xml.etree.ElementTree as etree
 import urlparse
 import urllib
 import time
 import uuid
 
-from settings import addonSettings
-from common import *
+from resources.lib.common import *
 import requests
+
 
 printDebug=printDebug("PleXBMC", "plexserver")
 
