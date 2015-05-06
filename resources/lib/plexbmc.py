@@ -30,10 +30,11 @@ import urlparse
 import time
 import random
 import datetime
+from common import *
 
 import xbmcplugin
 import xbmcgui
-from common import *  #Needed first to setup import locations
+
 import plex
 
 
@@ -2188,7 +2189,7 @@ def trackTag( server, tree, track, sectionart="", sectionthumb="", listing=True 
     if listing:
         addGUIItem(u,details,extraData,folder=False)
     else:
-        return ( url, details )
+        return ( u, details )
 
 def playlistTag(url, server, tree, track, sectionart="", sectionthumb="", listing=True ):
     printDebug.debug("== ENTER ==")
@@ -3965,7 +3966,7 @@ def switch_user():
     return True 
 
 ##So this is where we really start the addon 
-printDebug=PrintDebug("PleXBMC")
+printDebug = PrintDebug("PleXBMC")
 
 print "PleXBMC -> Running PleXBMC: %s " % GLOBAL_SETUP['__version__']
 
@@ -3997,8 +3998,9 @@ if settings.get_debug() >= printDebug.DEBUG_INFO:
 else:
     print "PleXBMC -> Debug is turned off.  Running silent"
 
-pluginhandle=0
+pluginhandle = 0
 plex_network=plex.Plex(load=False)
+
 
 def start_plexbmc():
     try:

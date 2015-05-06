@@ -1,5 +1,5 @@
 import pyxbmct.addonwindow as pyxbmct
-from common.common import PrintDebug, GLOBAL_SETUP
+from common import PrintDebug, GLOBAL_SETUP
 import xbmc
 
 printDebug = PrintDebug("PleXBMC", "plex_signin")

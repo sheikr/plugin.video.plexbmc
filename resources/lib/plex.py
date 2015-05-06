@@ -6,9 +6,10 @@ import uuid
 import requests
 
 import plexgdm
-from common.CacheControl import CacheControl
-from common.common import *
 from plexserver import PlexMediaServer
+from common import GLOBAL_SETUP, REQUIRED_REVISION, settings  # const and singletones
+from common import PrintDebug, CacheControl  # types
+from common import is_ip  # shared func
 
 printDebug = PrintDebug("PleXBMC", "plex")
 DEFAULT_PORT = "32400"
