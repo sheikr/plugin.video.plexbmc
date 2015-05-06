@@ -38,43 +38,43 @@ import xbmcgui
 import plex
 
 
-def mediaType( partData, server, dvdplayback=False ):
-    stream=partData['key']
-    file=partData['file']
+def media_type(part_data, server, dvd_playback=False):
+    stream = part_data['key']
+    file_name = part_data['file']
 
-    if ( file is None ) or ( settings.get_stream() == "1" ):
-        printDebug.debug( "Selecting stream")
+    if (file_name is None) or (settings.get_stream() == "1"):
+        printDebug.debug("Selecting stream")
         return server.get_formatted_url(stream)
 
-    #First determine what sort of 'file' file is
-
-    if file[0:2] == "\\\\":
+    # First determine what sort of 'file' file is
+    if file_name[0:2] == "\\\\":
         printDebug.debug("Detected UNC source file")
-        type="UNC"
-    elif file[0:1] == "/" or file[0:1] == "\\":
+        file_type = "UNC"
+    elif file_name[0:1] == "/" or file_name[0:1] == "\\":
         printDebug.debug("Detected unix source file")
-        type="nixfile"
-    elif file[1:3] == ":\\" or file[1:2] == ":/":
+        file_type = "nixfile"
+    elif file_name[1:3] == ":\\" or file_name[1:2] == ":/":
         printDebug.debug("Detected windows source file")
-        type="winfile"
+        file_type = "winfile"
     else:
-        printDebug.debug("Unknown file type source: %s" % file)
-        type=None
+        printDebug.debug("Unknown file type source: %s" % file_name)
+        file_type=None
 
     # 0 is auto select.  basically check for local file first, then stream if not found
     if settings.get_stream() == "0":
-        #check if the file can be found locally
-        if type == "nixfile" or type == "winfile":
+        # check if the file can be found locally
+        if file_type == "nixfile" or file_type == "winfile":
             printDebug.debug("Checking for local file")
             try:
-                exists = open(file, 'r')
+                exists = open(file_name, 'r')
                 printDebug.debug("Local file found, will use this")
                 exists.close()
-                return "file:%s" % file
-            except: pass
+                return "file:%s" % file_name
+            except:
+                pass
 
         printDebug.debug("No local file")
-        if dvdplayback:
+        if dvd_playback:
             printDebug.debug("Forcing SMB for DVD playback")
             settings.set_stream("2")
         else:
@@ -83,19 +83,19 @@ def mediaType( partData, server, dvdplayback=False ):
     # 2 is use SMB
     elif settings.get_stream() == "2" or settings.get_stream() == "3":
 
-        file=urllib.unquote(file)    
+        file_name = urllib.unquote(file_name)
         if settings.get_stream() == "2":
-            protocol="smb"
+            protocol = "smb"
         else:
-            protocol="afp"
+            protocol = "afp"
 
-        printDebug.debug( "Selecting smb/unc")
-        if type == "UNC":
-            filelocation="%s:%s" % (protocol, file.replace("\\","/"))
+        printDebug.debug("Selecting smb/unc")
+        if file_type == "UNC":
+            filelocation="%s:%s" % (protocol, file_name.replace("\\", "/"))
         else:
-            #Might be OSX type, in which case, remove Volumes and replace with server
-            server=server.get_location().split(':')[0]
-            loginstring=""
+            # Might be OSX type, in which case, remove Volumes and replace with server
+            server = server.get_location().split(':')[0]
+            loginstring = ""
 
             if settings.get_setting('nasoverride'):
                 if settings.get_setting('nasoverrideip'):
@@ -103,30 +103,31 @@ def mediaType( partData, server, dvdplayback=False ):
                     printDebug.debug("Overriding server with: %s" % server)
 
                 if settings.get_setting('nasuserid'):
-                    loginstring="%s:%s@" % (settings.get_setting('nasuserid'), settings.get_setting('naspass'))
+                    loginstring = "%s:%s@" % (settings.get_setting('nasuserid'), settings.get_setting('naspass'))
                     printDebug.debug("Adding AFP/SMB login info for user: %s" % settings.get_setting('nasuserid'))
 
-            if file.find('Volumes') > 0:
-                filelocation="%s:/%s" % (protocol, file.replace("Volumes",loginstring+server))
+            if file_name.find('Volumes') > 0:
+                filelocation = "%s:/%s" % (protocol, file_name.replace("Volumes", loginstring+server))
             else:
-                if type == "winfile":
-                    filelocation=("%s://%s%s/%s" % (protocol, loginstring, server, file[3:].replace("\\","/")))
+                if file_type == "winfile":
+                    filelocation = ("%s://%s%s/%s" % (protocol, loginstring, server, file_name[3:].replace("\\", "/")))
                 else:
-                    #else assume its a file local to server available over smb/samba (now we have linux PMS).  Add server name to file path.
-                    filelocation="%s://%s%s%s" % (protocol,loginstring, server, file)
+                    # else assume its a file local to server available over smb/samba
+                    # (now we have linux PMS). Add server name to file path.
+                    filelocation = "%s://%s%s%s" % (protocol, loginstring, server, file_name)
 
         if settings.get_setting('nasoverride') and settings.get_setting('nasroot'):
-            #Re-root the file path
+            # Re-root the file path
             printDebug.debug("Altering path %s so root is: %s" % (filelocation, settings.get_setting('nasroot')))
             if '/'+settings.get_setting('nasroot')+'/' in filelocation:
                 components = filelocation.split('/')
                 index = components.index(settings.get_setting('nasroot'))
                 for i in range(3,index):
                     components.pop(3)
-                filelocation='/'.join(components)
+                filelocation = '/'.join(components)
     else:
-        printDebug.debug( "No option detected, streaming is safest to choose" )
-        filelocation=server.get_formatted_url(stream)
+        printDebug.debug("No option detected, streaming is safest to choose")
+        filelocation = server.get_formatted_url(stream)
 
     printDebug.debug("Returning URL: %s " % filelocation)
     return filelocation
@@ -162,7 +163,7 @@ def addGUIItem(url, details, extraData, context=None, folder=True):
         liz.setProperty('Artist_Description', extraData.get('plot',''))
         liz.setProperty('Album_Description', extraData.get('plot',''))
 
-    #For all end items    
+    #For all end items
     if not folder:
         liz.setProperty('IsPlayable', 'true')
 
@@ -199,7 +200,7 @@ def addGUIItem(url, details, extraData, context=None, folder=True):
         liz.setProperty('UnWatchedEpisodes', str(extraData['UnWatchedEpisodes']))
 
         #Hack to show partial flag for TV shows and seasons
-        if extraData.get('partialTV') == 1:            
+        if extraData.get('partialTV') == 1:
             liz.setProperty('TotalTime', '100')
             liz.setProperty('ResumeTime', '50')
 
@@ -300,7 +301,7 @@ def displaySections( filter=None, display_shared=False ):
         xbmcplugin.endOfDirectory(pluginhandle, cacheToDisc=settings.get_setting('kodicache'))
         return
 
-    #For each of the servers we have identified            
+    #For each of the servers we have identified
     if plex_network.is_myplex_signedin():
         addGUIItem('http://myplexqueue', {'title': 'myplex Queue'}, {'type': 'Video', 'mode': MODE_MYPLEXQUEUE})
 
@@ -330,7 +331,7 @@ def displaySections( filter=None, display_shared=False ):
         extraData['type'] = "file"
         extraData['mode'] = MODE_PLEXONLINE
 
-        u="%s/system/plexonline" % server.get_url_location()            
+        u="%s/system/plexonline" % server.get_url_location()
         addGUIItem(u,details,extraData)
 
         #create playlist link
@@ -338,7 +339,7 @@ def displaySections( filter=None, display_shared=False ):
         extraData['type'] = "file"
         extraData['mode'] = MODE_PLAYLISTS
 
-        u="%s/playlists" % server.get_url_location()            
+        u="%s/playlists" % server.get_url_location()
         addGUIItem(u,details,extraData)
 
     if plex_network.is_myplex_signedin():
@@ -546,7 +547,7 @@ def Movies( url, tree=None ):
 def buildContextMenu( url, itemData, server ):
     context=[]
     url_parts = urlparse.urlparse(url)
-    section=url_parts.path.split('/')[3]  
+    section=url_parts.path.split('/')[3]
     ID=itemData.get('ratingKey','0')
 
     #Mark media unwatched
@@ -778,7 +779,7 @@ def TVEpisodes( url, tree=None ):
     xbmcplugin.addSortMethod(pluginhandle, 18 ) #rating
     xbmcplugin.addSortMethod(pluginhandle, 17 ) #year
     xbmcplugin.addSortMethod(pluginhandle, 29 ) #runtime
-    xbmcplugin.addSortMethod(pluginhandle, 28 ) #by MPAA    
+    xbmcplugin.addSortMethod(pluginhandle, 28 ) #by MPAA
 
     for episode in ShowTags:
 
@@ -855,7 +856,7 @@ def TVEpisodes( url, tree=None ):
         #Determine what tupe of watched flag [overlay] to use
         if int(episode.get('viewCount',0)) > 0:
             details['playcount'] = 1
-        else: 
+        else:
             details['playcount'] = 0
 
         #Extended Metadata
@@ -934,7 +935,7 @@ def getAudioSubtitlesMedia( server, tree, full=False ):
                 printDebug.debug("No Video data found")
                 return {}
 
-    media['viewOffset']=timings.get('viewOffset',0)    
+    media['viewOffset']=timings.get('viewOffset',0)
     media['duration']=timings.get('duration',12*60*60)
 
     if full:
@@ -950,10 +951,10 @@ def getAudioSubtitlesMedia( server, tree, full=False ):
                         'thumbnailImage': getThumb(timings,server) }
 
             if timings.get('type') == "episode":
-                full_data['episode']     = int(timings.get('index',0)) 
-                full_data['aired']       = timings.get('originallyAvailableAt','') 
-                full_data['tvshowtitle'] = timings.get('grandparentTitle',tree.get('grandparentTitle','')).encode('utf-8') 
-                full_data['season']      = int(timings.get('parentIndex',tree.get('parentIndex',0))) 
+                full_data['episode']     = int(timings.get('index',0))
+                full_data['aired']       = timings.get('originallyAvailableAt','')
+                full_data['tvshowtitle'] = timings.get('grandparentTitle',tree.get('grandparentTitle','')).encode('utf-8')
+                full_data['season']      = int(timings.get('parentIndex',tree.get('parentIndex',0)))
 
         elif media_type == "music":
 
@@ -966,15 +967,15 @@ def getAudioSubtitlesMedia( server, tree, full=False ):
                        'thumbnailImage': getThumb(timings,server) }
 
             extra['album']=timings.get('parentKey')
-            extra['index']=timings.get('index')                       
+            extra['index']=timings.get('index')
 
     details = timings.findall('Media')
 
     media_details_list=[]
     for media_details in details:
 
-        resolution=""        
-        try:       
+        resolution=""
+        try:
             if media_details.get('videoResolution') == "sd":
                 resolution="SD"
             elif int(media_details.get('videoResolution',0)) >= 1080:
@@ -1058,7 +1059,7 @@ def getAudioSubtitlesMedia( server, tree, full=False ):
     printDebug.debug( streamData )
     return streamData
 
-def playPlaylist ( server, data ):    
+def playPlaylist ( server, data ):
     printDebug.debug("== ENTER ==")
     printDebug.debug("Creating new playlist")
     playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
@@ -1078,15 +1079,15 @@ def playPlaylist ( server, data ):
 
         liz=xbmcgui.ListItem(item.get('title','Unknown'), iconImage=data['full_data'].get('thumbnailImage','') , thumbnailImage=data['full_data'].get('thumbnailImage',''))
 
-        liz.setInfo( type='music', infoLabels=item )        
+        liz.setInfo( type='music', infoLabels=item )
         playlist.add(url, liz)
 
     index = int(data['extra'].get('index',0)) - 1
     printDebug.debug("Playlist complete.  Starting playback from track %s [playlist index %s] " % (data['extra'].get('index',0), index ))
-    xbmc.Player().playselected( index )   
+    xbmc.Player().playselected( index )
 
-    
-    
+
+
     return
 
 def playLibraryMedia( vids, override=False, force=None, full_data=False, shelf=False ):
@@ -1109,7 +1110,7 @@ def playLibraryMedia( vids, override=False, force=None, full_data=False, shelf=F
     if force:
         full_data = True
 
-    streams=getAudioSubtitlesMedia(server,tree, full_data)  
+    streams=getAudioSubtitlesMedia(server,tree, full_data)
 
     if force and streams['type'] == "music":
         playPlaylist(server, streams)
@@ -1170,7 +1171,7 @@ def playLibraryMedia( vids, override=False, force=None, full_data=False, shelf=F
         else:
             resume=force
 
-    if force or shelf:    
+    if force or shelf:
         if resume:
             item.setProperty('ResumeTime', str(resume) )
             item.setProperty('TotalTime', str(duration) )
@@ -1257,12 +1258,12 @@ def setAudioSubtitles( stream ):
             try:
                 xbmc.Player().showSubtitles(False)
                 if subtitle.get('key'):
-                    xbmc.Player().setSubtitles(subtitle['key'])                
+                    xbmc.Player().setSubtitles(subtitle['key'])
                 else:
                     printDebug.info("Enabling embedded subtitles at index %s" % stream['subOffset'])
                     xbmc.Player().setSubtitleStream(int(stream['subOffset']))
 
-                xbmc.Player().showSubtitles(True)      
+                xbmc.Player().showSubtitles(True)
                 return True
             except:
                 printDebug.info("Error setting subtitle")
@@ -1320,7 +1321,7 @@ def selectMedia( data, server ):
             if '.ifo' in options[result]:
                 dvdplayback=True
 
-    newurl=mediaType({'key': options[result][0] , 'file' : options[result][1]},server,dvdplayback)
+    newurl = media_type({'key': options[result][0], 'file': options[result][1]}, server, dvdplayback)
 
     printDebug.debug("We have selected media at %s" % newurl)
     return newurl
@@ -1366,7 +1367,7 @@ def monitorPlayback( id, server, playurl, session=None ):
         xbmc.sleep(2000)
 
     #If we get this far, playback has stopped
-    printDebug.debug("Playback Stopped")        
+    printDebug.debug("Playback Stopped")
     server.report_playback_progress(id,playedTime*1000, state='stopped', duration=totalTime*1000)
 
     if session is not None:
@@ -1691,7 +1692,7 @@ def getMasterServer(all=False):
                     printDebug.debug("Returning local")
                     return serverData
     elif len(possibleServers) == 0:
-        return 
+        return
 
     return possibleServers[0]
 
@@ -1769,8 +1770,8 @@ def albums( url, tree=None ):
         if recent:
             details['title']="%s - %s" % ( details['artist'], details['album'])
         else:
-            details['title']=details['album']         
-            
+            details['title']=details['album']
+
         extraData={'type'         : "Music" ,
                    'thumb'        : getThumb(album, server) ,
                    'fanart_image' : getFanart(album, server) ,
@@ -1898,7 +1899,7 @@ def PlexPlugins(url, tree=None):
 
             for child in plugin:
                 if child.tag == "Media":
-                    extraData['parameters'] = {'indirect' : child.get('indirect','0')}            
+                    extraData['parameters'] = {'indirect' : child.get('indirect','0')}
 
             addGUIItem(p_url, details, extraData, folder=False)
 
@@ -2090,7 +2091,7 @@ def movieTag(url, server, tree, movie, randomNumber):
              'mpaa'      : movie.get('contentRating', '').encode('utf-8'),
              'year'      : int(movie.get('year',0)),
              'date'      : movie.get('originallyAvailableAt','1970-01-01'),
-             'tagline'   : movie.get('tagline',''), 
+             'tagline'   : movie.get('tagline',''),
              'DateAdded' : str(datetime.datetime.fromtimestamp(int(movie.get('addedAt',0))))}
 
     #Extra data required to manage other properties
@@ -2195,11 +2196,11 @@ def playlistTag(url, server, tree, track, sectionart="", sectionthumb="", listin
     printDebug.debug("== ENTER ==")
 
     details={'title'       : track.get('title','Unknown').encode('utf-8') ,
-             'duration'    : int(track.get('duration',0))/1000 
+             'duration'    : int(track.get('duration',0))/1000
              }
 
     extraData={'type'         : track.get('playlistType', ''),
-               'thumb'      : getThumb({'thumb' : track.get('composite', '')},server)} 
+               'thumb'      : getThumb({'thumb' : track.get('composite', '')},server)}
 
     if extraData['type'] == "video":
         extraData['mode'] = MODE_MOVIES
@@ -2266,7 +2267,7 @@ def music( url, tree=None ):
     printDebug.debug("== ENTER ==")
     xbmcplugin.setContent(pluginhandle, 'artists')
 
-    server=plex_network.get_server_from_url(url) 
+    server=plex_network.get_server_from_url(url)
 
     tree=getXML(url,tree)
     if tree is None:
@@ -2367,7 +2368,7 @@ def getShelfThumb(data, server, seasonThumb=False, prefer_season=False, width=40
         if prefer_season:
             thumbnail=data.get('parentThumb',data.get('grandparentThumb','')).split('?t')[0].encode('utf-8')
         else:
-            thumbnail=data.get('grandparentThumb','').split('?t')[0].encode('utf-8') 
+            thumbnail=data.get('grandparentThumb','').split('?t')[0].encode('utf-8')
     else:
         thumbnail=data.get('thumb','').split('?t')[0].encode('utf-8')
 
@@ -2584,7 +2585,7 @@ def skin( server_list=None, type=None ):
     sharedCount=0
     shared_flag={}
     hide_shared = settings.get_setting('hide_shared')
-    
+
     WINDOW.setProperty("plexbmc.myplex_signedin" , str(plex_network.is_myplex_signedin()))
     WINDOW.setProperty("plexbmc.plexhome_enabled" , str(plex_network.is_plexhome_enabled()))
     if server_list is None:
@@ -2796,8 +2797,8 @@ def amberskin():
                     continue
                 window="VideoLibrary"
                 mode=MODE_MOVIES
-                WINDOW.setProperty("plexbmc.%d.search" % (sectionCount) , "ActivateWindow(%s,%s%s%s&mode=%s,return)" % (window, base_url, path, "/search?type=1", mode) )  
-                
+                WINDOW.setProperty("plexbmc.%d.search" % (sectionCount) , "ActivateWindow(%s,%s%s%s&mode=%s,return)" % (window, base_url, path, "/search?type=1", mode) )
+
             elif section.is_artist():
                 if hide_shared and not server.is_owned():
                     shared_flag['artist']=True
@@ -2814,7 +2815,7 @@ def amberskin():
                     continue
                 window="Pictures"
                 WINDOW.setProperty("plexbmc.%d.year" % (sectionCount) , "ActivateWindow(%s,%s%s%s&mode=%s,return)" % (window, base_url, path, "/year", mode) )
-                
+
             else:
                 if hide_shared and not server.is_owned():
                     shared_flag['movie']=True
@@ -2829,7 +2830,7 @@ def amberskin():
             else:
                 suffix='/all'
 
-                
+
             #Build that listing..
             WINDOW.setProperty("plexbmc.%d.uuid" % (sectionCount) , section.get_uuid())
             WINDOW.setProperty("plexbmc.%d.title"    % (sectionCount) , section.get_title())
@@ -2963,7 +2964,7 @@ def clear_skin_sections(WINDOW=None, start=0, finish=50):
 
     if WINDOW is None:
         WINDOW = xbmcgui.Window( 10000 )
-    
+
     try:
         for i in range(start, finish+1):
 
@@ -2987,11 +2988,11 @@ def clear_skin_sections(WINDOW=None, start=0, finish=50):
             WINDOW.clearProperty("plexbmc.%d.album"     % ( i ) )
             WINDOW.clearProperty("plexbmc.%d.year"     % ( i ) )
             WINDOW.clearProperty("plexbmc.%d.recent.content"    % ( i ) )
-            WINDOW.clearProperty("plexbmc.%d.ondeck.content"    % ( i ) )    
-    except: 
+            WINDOW.clearProperty("plexbmc.%d.ondeck.content"    % ( i ) )
+    except:
         printDebug.debug("Clearing stopped")
     printDebug.debug("Finished clearing properties")
- 
+
 def fullShelf(server_list={}):
     #Gather some data and set the window properties
     printDebug.debug("== ENTER ==")
@@ -3066,7 +3067,7 @@ def fullShelf(server_list={}):
     printDebug.debugplus("Recent object is: %s" % recent_list)
     printDebug.debugplus("ondeck object is: %s" % ondeck_list)
     prefer_season=settings.get_setting('prefer_season_thumbs')
-    
+
     #For each of the servers we have identified
     for media, source_server, libuuid in recent_list:
 
@@ -3366,7 +3367,7 @@ def shelf( server_list=None ):
     movieCount=1
     seasonCount=1
     musicCount=1
-    added_list={}    
+    added_list={}
     direction=True
     full_count=0
 
@@ -3649,7 +3650,7 @@ def shelfChannel(server_list = None):
 
             printDebug.debug("Building Recent window title: %s\n      Building Recent window url: %s\n      Building Recent window thumb: %s" % (media.get('title', 'Unknown'),c_url,c_thumb))
 
-    clearChannelShelf(channelCount)        
+    clearChannelShelf(channelCount)
     return
 
 def clearChannelShelf (channelCount=0):
@@ -3938,11 +3939,11 @@ def switch_user():
         printDebug("No users listed or only one user, plexHome not enabled")
         return False
 
-    printDebug("found %s users: %s" % (len(user_list), user_list.keys()))  
+    printDebug("found %s users: %s" % (len(user_list), user_list.keys()))
 
     #Get rid of currently logged in user.
     user_list.pop(plex_network.get_myplex_user(), None)
-    
+
     select_screen = xbmcgui.Dialog()
     result = select_screen.select('Switch User',user_list.keys())
     if result == -1:
@@ -3963,9 +3964,9 @@ def switch_user():
         xbmcgui.Dialog().ok("Switch Failed",msg)
         return False
 
-    return True 
+    return True
 
-##So this is where we really start the addon 
+# So this is where we really start the addon
 printDebug = PrintDebug("PleXBMC")
 
 print "PleXBMC -> Running PleXBMC: %s " % GLOBAL_SETUP['__version__']
@@ -4004,43 +4005,43 @@ plex_network=plex.Plex(load=False)
 
 def start_plexbmc():
     try:
-        params=get_params(sys.argv[2])
+        params = get_params(sys.argv[2])
     except:
-        params={}
+        params = {}
 
-    #Now try and assign some data to them
-    param_url=params.get('url')
-    command=None
+    # Now try and assign some data to them
+    param_url = params.get('url')
+    command = None
 
     if param_url:
-        if ( param_url.startswith('http') or param_url.startswith('file') ):
+        if param_url.startswith('http') or param_url.startswith('file'):
             param_url = urllib.unquote(param_url)
         elif param_url.startswith('cmd'):
-            command=urllib.unquote(param_url).split(':')[1]
+            command = urllib.unquote(param_url).split(':')[1]
 
-    param_name=urllib.unquote_plus(params.get('name',""))
-    mode=int(params.get('mode',-1))
-    play_transcode=True if int(params.get('transcode',0)) == 1 else False
-    param_identifier=params.get('identifier')
-    param_indirect=params.get('indirect')
-    force=params.get('force')
+    param_name = urllib.unquote_plus(params.get('name', ""))
+    mode = int(params.get('mode', -1))
+    play_transcode = True if int(params.get('transcode', 0)) == 1 else False
+    param_identifier = params.get('identifier')
+    param_indirect = params.get('indirect')
+    force = params.get('force')
 
     if command is None:
         try:
-            command=sys.argv[1]
+            command = sys.argv[1]
         except:
             pass
 
     if command == "cacherefresh":
         plex_network.delete_cache()
         xbmc.executebuiltin("ReloadSkin()")
-    #Open the add-on settings page, then refresh plugin
+    # Open the add-on settings page, then refresh plugin
     elif command == "setting":
         settings.open_settings()
         if xbmcgui.getCurrentWindowId() == 10000:
             printDebug.debug("Currently in home - refreshing to allow new settings to be taken")
             xbmc.executebuiltin("ReloadSkin()")
-    #Refresh the current XBMC listing    
+    # Refresh the current XBMC listing
     elif command == "refresh":
         xbmc.executebuiltin("Container.Refresh")
     elif command == "switchuser":
@@ -4071,7 +4072,7 @@ def start_plexbmc():
             WINDOW.clearProperty("plexbmc.plexhome_avatar" )
             clear_skin_sections()
             clearOnDeckShelf()
-            clearShelf()            
+            clearShelf()
             xbmc.executebuiltin("ReloadSkin()")
 
     elif command == "signin":
@@ -4082,18 +4083,16 @@ def start_plexbmc():
         del signin_window
 
     elif command == "signintemp":
-        #Awful hack to get around running a script from a listitem..
-        xbmc.executebuiltin('XBMC.RunScript(plugin.video.plexbmc, signin)')       
+        # Awful hack to get around running a script from a listitem..
+        xbmc.executebuiltin('XBMC.RunScript(plugin.video.plexbmc, signin)')
 
     elif command == "managemyplex":
-
         if not plex_network.is_myplex_signedin():
             ret = xbmcgui.Dialog().yesno("Manage myplex","You are not currently logged into myplex.  Please continue to sign in, or cancel to return")
             if ret:
-                xbmc.executebuiltin('XBMC.RunScript(plugin.video.plexbmc, signin)')       
+                xbmc.executebuiltin('XBMC.RunScript(plugin.video.plexbmc, signin)')
             else:
                 return
-
         elif not plex_network.is_admin():
             return xbmcgui.Dialog().ok("Manage myplex","To access these screens you must be logged in as an admin user.  Please switch user and try again")
 
@@ -4106,40 +4105,40 @@ def start_plexbmc():
     else:
         plex_network.load()
 
-        #Populate Skin variables
+        # Populate Skin variables
         if command == "skin":
             try:
-                type=sys.argv[2]
+                type = sys.argv[2]
             except:
-                type=None
+                type = None
             skin(type=type)
 
         elif command == "amberskin":
             amberskin()
 
-        #Populate recently/on deck shelf items 
+        # Populate recently/on deck shelf items
         elif command == "shelf":
             shelf()
 
-        #Populate channel recently viewed items    
+        # Populate channel recently viewed items
         elif command == "channelShelf":
-            #shelfChannel()
+            # shelfChannel()
             pass
-            
-        #Send a library update to Plex    
+
+        # Send a library update to Plex
         elif command == "update":
-            server_uuid=sys.argv[2]
-            section_id=sys.argv[3]
+            server_uuid = sys.argv[2]
+            section_id = sys.argv[3]
             libraryRefresh(server_uuid, section_id)
 
-        #Mark an item as watched/unwatched in plex    
+        # Mark an item as watched/unwatched in plex
         elif command == "watch":
-            server_uuid=sys.argv[2]
-            metadata_id=sys.argv[3]
-            watch_status=sys.argv[4]
-            watched(server_uuid, metadata_id, watch_status )
+            server_uuid = sys.argv[2]
+            metadata_id = sys.argv[3]
+            watch_status = sys.argv[4]
+            watched(server_uuid, metadata_id, watch_status)
 
-        #nt currently used              
+        # nt currently used
         elif command == "refreshplexbmc":
             plex_network.discover()
             server_list = plex_network.get_server_list()
@@ -4147,29 +4146,29 @@ def start_plexbmc():
             shelf(server_list)
             shelfChannel(server_list)
 
-        #delete media from PMS    
+        # delete media from PMS
         elif command == "delete":
-            server_uuid=sys.argv[2]
-            metadata_id=sys.argv[3]
+            server_uuid = sys.argv[2]
+            metadata_id = sys.argv[3]
             deleteMedia(server_uuid, metadata_id)
 
-        #Display subtitle selection screen    
+        # Display subtitle selection screen
         elif command == "subs":
-            server_uuid=sys.argv[2]
-            metadata_id=sys.argv[3]
+            server_uuid = sys.argv[2]
+            metadata_id = sys.argv[3]
             alterSubs(server_uuid, metadata_id)
 
-        #Display audio streanm selection screen    
+        # Display audio streanm selection screen
         elif command == "audio":
-            server_uuid=sys.argv[2]
-            metadata_id=sys.argv[3]
+            server_uuid = sys.argv[2]
+            metadata_id = sys.argv[3]
             alterAudio(server_uuid, metadata_id)
 
-        #Allow a mastre server to be selected (for myplex queue)    
+        # Allow a mastre server to be selected (for myplex queue)
         elif command == "master":
             setMasterServer()
 
-        #else move to the main code    
+        # else move to the main code
         else:
 
             global pluginhandle
@@ -4178,7 +4177,7 @@ def start_plexbmc():
             except:
                 pass
 
-            WINDOW = xbmcgui.Window( xbmcgui.getCurrentWindowId() )
+            WINDOW = xbmcgui.Window(xbmcgui.getCurrentWindowId())
             WINDOW.clearProperty("heading")
             WINDOW.clearProperty("heading2")
 
@@ -4188,8 +4187,8 @@ def start_plexbmc():
                 print "PleXBMC -> Name: %s" % param_name
                 print "PleXBMC -> identifier: %s" % param_identifier
 
-            #Run a function based on the mode variable that was passed in the URL
-            if ( mode == None ) or ( param_url == None ) or ( len(param_url)<1 ):
+            # Run a function based on the mode variable that was passed in the URL
+            if (mode is None) or (param_url is None) or (len(param_url) < 1):
                 displaySections()
 
             elif mode == MODE_GETCONTENT:
@@ -4208,10 +4207,10 @@ def start_plexbmc():
                 TVSeasons(param_url)
 
             elif mode == MODE_PLAYLIBRARY:
-                playLibraryMedia(param_url,force=force, override=play_transcode)
+                playLibraryMedia(param_url, force=force, override=play_transcode)
 
             elif mode == MODE_PLAYSHELF:
-                playLibraryMedia(param_url,full_data=True, shelf=True)
+                playLibraryMedia(param_url, full_data=True, shelf=True)
 
             elif mode == MODE_TVEPISODES:
                 TVEpisodes(param_url)
@@ -4238,28 +4237,28 @@ def start_plexbmc():
                 music(param_url)
 
             elif mode == MODE_VIDEOPLUGINPLAY:
-                videoPluginPlay(param_url,param_identifier,param_indirect)
+                videoPluginPlay(param_url, param_identifier, param_indirect)
 
             elif mode == MODE_PLEXONLINE:
                 plexOnline(param_url)
 
             elif mode == MODE_CHANNELINSTALL:
-                install(param_url,param_name)
+                install(param_url, param_name)
 
             elif mode == MODE_CHANNELVIEW:
                 channelView(param_url)
 
             elif mode == MODE_PLAYLIBRARY_TRANSCODE:
-                playLibraryMedia(param_url,override=True)
+                playLibraryMedia(param_url, override=True)
 
             elif mode == MODE_MYPLEXQUEUE:
                 myPlexQueue()
 
             elif mode == MODE_CHANNELSEARCH:
-                channelSearch( param_url, params.get('prompt') )
+                channelSearch(param_url, params.get('prompt'))
 
             elif mode == MODE_CHANNELPREFS:
-                channelSettings ( param_url, params.get('id') )
+                channelSettings(param_url, params.get('id'))
 
             elif mode == MODE_SHARED_MOVIES:
                 displaySections(filter="movies", display_shared=True)
