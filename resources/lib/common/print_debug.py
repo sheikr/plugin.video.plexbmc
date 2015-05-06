@@ -1,9 +1,12 @@
 import inspect
 import re
-from . import settings
+
+from .addon_settings import AddonSettings
+
+settings = AddonSettings()
 
 
-class PrintDebug:
+class PrintDebug(object):
     DEBUG_OFF = 0
     DEBUG_INFO = 1
     DEBUG_DEBUG = 2
@@ -20,6 +23,8 @@ class PrintDebug:
             self.sub = "." + sub
         else:
             self.sub = ''
+
+
 
         self.level = settings.get_debug()
         self.token_regex = re.compile('-Token=[a-z|0-9].*[&|$]')

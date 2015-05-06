@@ -1,6 +1,10 @@
 import socket
 import struct
 
+from .addon_settings import AddonSettings
+
+settings = AddonSettings()
+
 
 def is_ip(address):
     """from http://www.seanelavelle.com/2012/04/16/checking-for-a-valid-ip-in-python/"""
@@ -13,7 +17,7 @@ def is_ip(address):
     return ip
 
 
-def wake_servers(settings):
+def wake_servers():
     if settings.get_setting('wolon'):
 
         print "PleXBMC -> Wake On LAN: true"

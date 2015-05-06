@@ -3,10 +3,12 @@ import urlparse
 import urllib
 import time
 import requests
+import uuid
 
 from resources.lib.common import *
 from plex_section import PlexSection
 
+settings = AddonSettings()
 
 printDebug = PrintDebug("PleXBMC", "plexserver")
 
@@ -99,7 +101,8 @@ class PlexMediaServer:
     def __create_plex_identification_string(self):
         header = []
         for key, value in self.__create_plex_identification().items():
-            header.append("%s=%s" % (key, urllib.quote(value)))
+            printDebug.debug("key: %s, value:%s" % (key, str(value)))
+            header.append("%s=%s" % (key, urllib.quote(str(value))))
 
         return "&".join(header)
 

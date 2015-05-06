@@ -37,6 +37,8 @@ import xbmcgui
 
 from plexserver import plex_network
 
+settings = AddonSettings()
+
 
 def media_type(part_data, server, dvd_playback=False):
     stream = part_data['key']

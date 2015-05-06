@@ -7,10 +7,11 @@ import requests
 
 from plex_server import PlexMediaServer
 from plex_gdm import PlexGdm
-from common import GLOBAL_SETUP, REQUIRED_REVISION, settings  # const and singletones
-from common import PrintDebug, CacheControl  # types
+from common import GLOBAL_SETUP, REQUIRED_REVISION  # const and singletones
+from common import PrintDebug, CacheControl, AddonSettings  # types
 from common import is_ip  # shared func
 
+settings = AddonSettings()
 
 printDebug = PrintDebug("PleXBMC", "plex")
 DEFAULT_PORT = "32400"
@@ -19,6 +20,9 @@ DEFAULT_PORT = "32400"
 class Plex:
     def __init__(self, load=False):
         # Provide an interface into Plex
+
+
+
         self.cache = CacheControl(GLOBAL_SETUP['__cachedir__'] + "cache/servers", settings.get_setting('cache'))
         self.myplex_server = 'https://plex.tv'
         self.myplex_user = None
