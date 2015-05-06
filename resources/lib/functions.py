@@ -4,7 +4,7 @@ import json
 import string
 import traceback
 import xbmc
-from settings import settings
+from helper_settings import settings
 from httppersist import requests
 
 def xbmc_photo():

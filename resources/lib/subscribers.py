@@ -3,7 +3,7 @@ import threading
 import xbmcgui
 from xml.dom.minidom import parseString
 from functions import *
-from settings import settings
+from helper_settings import settings
 from httppersist import requests
 
 class SubscriptionManager:

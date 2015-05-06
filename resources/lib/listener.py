@@ -4,7 +4,7 @@ import xbmc
 from SocketServer import ThreadingMixIn
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from urlparse import urlparse, parse_qs
-from settings import settings
+from helper_settings import settings
 from functions import *
 from subscribers import subMgr
 

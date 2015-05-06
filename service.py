@@ -44,7 +44,7 @@ __resource__   = xbmc.translatePath( os.path.join( __cwd__, 'resources', 'lib' )
 # local includes
 sys.path.append (__resource__)
 
-from settings import settings
+from helper_settings import settings
 from httppersist import requests
 from functions import *
 from subscribers import subMgr
