@@ -3999,7 +3999,7 @@ else:
 
 pluginhandle = 0
 
-from commands import get_command_by_name
+from commands import COMMANDS, BaseCommand
 
 
 def start_plexbmc():
@@ -4031,22 +4031,26 @@ def start_plexbmc():
         except:
             pass
 
-    command = get_command_by_name(command_name)
+    # todo pass parameters to constructor
+    command = COMMANDS.get(command_name)()
 
     '''if command_name == "cacherefresh":
         plex_network.delete_cache()
         xbmc.executebuiltin("ReloadSkin()")'''
-    if command:
+    if command and isinstance(command, BaseCommand):
         command.execute()
+
     # Open the add-on settings page, then refresh plugin
     elif command_name == "setting":
         settings.open_settings()
         if xbmcgui.getCurrentWindowId() == 10000:
             printDebug.debug("Currently in home - refreshing to allow new settings to be taken")
             xbmc.executebuiltin("ReloadSkin()")
+
     # Refresh the current XBMC listing
     elif command_name == "refresh":
         xbmc.executebuiltin("Container.Refresh")
+
     elif command_name == "switchuser":
         if switch_user():
             clear_skin_sections()
