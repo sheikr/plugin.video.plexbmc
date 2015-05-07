@@ -3999,6 +3999,8 @@ else:
 
 pluginhandle = 0
 
+from commands import get_command_by_name
+
 
 def start_plexbmc():
     try:
@@ -4029,9 +4031,13 @@ def start_plexbmc():
         except:
             pass
 
-    if command_name == "cacherefresh":
+    command = get_command_by_name(command_name)
+
+    '''if command_name == "cacherefresh":
         plex_network.delete_cache()
-        xbmc.executebuiltin("ReloadSkin()")
+        xbmc.executebuiltin("ReloadSkin()")'''
+    if command:
+        command.execute()
     # Open the add-on settings page, then refresh plugin
     elif command_name == "setting":
         settings.open_settings()
