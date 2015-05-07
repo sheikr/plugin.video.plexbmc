@@ -2,9 +2,9 @@ import os
 import socket
 import struct
 import sys
+
 import xbmc
 import xbmcaddon
-
 import xbmcgui
 
 from .addon_settings import AddonSettings
@@ -38,6 +38,55 @@ def wake_servers():
                     print "PleXBMC -> Incorrect MAC address format for server %s" % servers
                 except:
                     print "PleXBMC -> Unknown wake on lan error"
+
+
+def get_link_url(url, pathData, server, season_shelf=False):
+    if not season_shelf:
+        path = pathData.get('key', '')
+    else:
+        path = pathData.get('parentKey', '') + "/children"
+
+    printDebug.debug("Path is %s" % path)
+
+    if path == '':
+        printDebug.debug("Empty Path")
+        return
+
+    #If key starts with http, then return it
+    if path.startswith('http'):
+        printDebug.debug("Detected http link")
+        return path
+
+    #If key starts with a / then prefix with server address
+    elif path.startswith('/'):
+        printDebug.debug("Detected base path link")
+        return '%s%s' % (server.get_url_location(), path)
+
+    #If key starts with plex:// then it requires transcoding
+    elif path.startswith("plex:") :
+        printDebug.debug("Detected plex link")
+        components = path.split('&')
+        for i in components:
+            if 'prefix=' in i:
+                del components[components.index(i)]
+                break
+        if pathData.get('identifier') is not None:
+            components.append('identifier='+pathData['identifier'])
+
+        path='&'.join(components)
+        return 'plex://'+server.get_location()+'/'+'/'.join(path.split('/')[3:])
+
+    elif path.startswith("rtmp"):
+        printDebug.debug("Detected RTMP link")
+        return path
+
+    #Any thing else is assumed to be a relative path and is built on existing url
+    else:
+        printDebug.debug("Detected relative link")
+        return "%s/%s" % (url, path)
+
+    return url
+
 
 
 def clear_shelf(movieCount=0, seasonCount=0, musicCount=0, photoCount=0):

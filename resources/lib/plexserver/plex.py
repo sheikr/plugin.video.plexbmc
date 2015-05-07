@@ -637,3 +637,6 @@ class Plex:
         printDebug("Gathered information: %s" % result)
 
         return result
+
+
+plex_network = Plex(load=False)

@@ -3,6 +3,7 @@ import xbmcgui
 
 from .base_command import BaseCommand
 from ..plexserver import plex_network
+from ..myplex_dialogs import PlexManageDialog
 
 
 class CommandManageMyPlex(BaseCommand):
@@ -22,8 +23,6 @@ class CommandManageMyPlex(BaseCommand):
             return xbmcgui.Dialog().ok("Manage myplex",
                                        "To access these screens you must be logged in as an admin user.\
                                        Please switch user and try again")
-
-        from myplex_dialogs import PlexManageDialog
 
         manage_window = PlexManageDialog('Manage myplex')
         manage_window.set_authentication_target(plex_network)

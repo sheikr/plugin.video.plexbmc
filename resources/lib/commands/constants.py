@@ -7,6 +7,9 @@ from .command_signin import CommandSignin
 from .command_signin_temp import CommandSigninTemp
 from .command_manage_my_plex import CommandManageMyPlex
 
+from .command_skin import CommandSkin
+from .command_amberskin import CommandAmberSkin
+
 
 COMMAND_CACHE_REFRESH = "cacherefresh"
 COMMAND_SETTINGS = "setting"
@@ -17,6 +20,8 @@ COMMAND_SIGNIN = "signin"
 COMMAND_SIGNIN_TEMP = "signintemp"
 COMMAND_MANAGE_MY_PLEX = "managemyplex"
 
+COMMAND_SKIN = "skin"
+COMMAND_AMBERSKIN = "amberskin"
 
 COMMANDS = {
     COMMAND_CACHE_REFRESH: CommandCacheRefresh,
@@ -26,5 +31,8 @@ COMMANDS = {
     COMMAND_SIGNOUT: CommandSignout,
     COMMAND_SIGNIN: CommandSignin,
     COMMAND_SIGNIN_TEMP: CommandSigninTemp,
-    COMMAND_MANAGE_MY_PLEX: CommandManageMyPlex
+    COMMAND_MANAGE_MY_PLEX: CommandManageMyPlex,
+
+    COMMAND_SKIN: CommandSkin,
+    COMMAND_AMBERSKIN: CommandAmberSkin
 }
