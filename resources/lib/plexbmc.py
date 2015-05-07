@@ -2785,8 +2785,6 @@ def clearChannelShelf (channelCount=0):
 
     return
 
-
-
 def myPlexQueue():
     printDebug.debug("== ENTER ==")
 
@@ -3103,21 +3101,6 @@ def start_plexbmc():
             command_name = sys.argv[1]
         except:
             pass
-
-    '''
-    elif command_name == "skin":
-        plex_network.load()
-        try:
-            skin_type = sys.argv[2]
-        except:
-            skin_type = None
-        skin(type=skin_type)
-
-    # Populate Skin variables
-    elif command_name == "amberskin":
-        plex_network.load()
-        amberskin()
-    '''
 
     args = sys.argv[2:]
     command = COMMANDS.get(command_name)

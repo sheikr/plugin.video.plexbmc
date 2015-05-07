@@ -30,7 +30,7 @@ class CommandSkin(BaseCommand):
         return
 
 
-def _skin(type=None, server_list=None):
+def _skin(skin_type=None, server_list=None):
     # Gather some data and set the window properties
     printDebug.debug("== ENTER ==")
     # Get the global host variable set in settings
@@ -56,7 +56,8 @@ def _skin(type=None, server_list=None):
             extra_data = {'fanart_image': server.get_fanart(section),
                           'thumb': server.get_fanart(section)}
 
-            #Determine what we are going to do process after a link is selected by the user, based on the content we find
+            # Determine what we are going to do process after a link
+            # is selected by the user, based on the content we find
 
             path = section.get_path()
 
@@ -149,7 +150,7 @@ def _skin(type=None, server_list=None):
                 window_name, s_url))
             section_count += 1
 
-    if type == "nocat":
+    if skin_type == "nocat":
         window.setProperty("plexbmc.%d.title" % section_count, "Shared...")
         window.setProperty("plexbmc.%d.subtitle" % section_count, "Shared")
         window.setProperty("plexbmc.%d.path" % section_count,
