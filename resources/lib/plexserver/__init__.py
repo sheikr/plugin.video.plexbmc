@@ -1,4 +1,4 @@
-__author__ = 'oburdun'
+__author__ = 'Dukobpa3'
 
 from .plex_server import PlexMediaServer
 from .plex_gdm import PlexGdm

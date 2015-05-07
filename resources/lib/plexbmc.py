@@ -22,7 +22,6 @@
 
     You should have received a copy of the GNU General Public License
     along with PleXBMC Plugin.  If not, see <http://www.gnu.org/licenses/>.
-
 """
 
 import urllib
@@ -3931,20 +3930,20 @@ def displayServers( url ):
     xbmcplugin.endOfDirectory(pluginhandle,cacheToDisc=settings.get_setting('kodicache'))
 
 def switch_user():
-    #Get listof users
+    # Get list of users
     user_list = plex_network.get_plex_home_users()
-    #zero means we are not plexHome'd up
+    # zero means we are not plexHome'd up
     if user_list is None or len(user_list) == 1:
         printDebug("No users listed or only one user, plexHome not enabled")
         return False
 
     printDebug("found %s users: %s" % (len(user_list), user_list.keys()))
 
-    #Get rid of currently logged in user.
+    # Get rid of currently logged in user.
     user_list.pop(plex_network.get_myplex_user(), None)
 
     select_screen = xbmcgui.Dialog()
-    result = select_screen.select('Switch User',user_list.keys())
+    result = select_screen.select('Switch User', user_list.keys())
     if result == -1:
         printDebug("Dialog cancelled")
         return False
@@ -3952,12 +3951,12 @@ def switch_user():
     printDebug("user [%s] selected" % user_list.keys()[result])
     user = user_list[user_list.keys()[result]]
 
-    pin=None
+    pin = None
     if user['protected'] == '1':
         printDebug("Protected user [%s], requesting password" % user['title'])
         pin = select_screen.input("Enter PIN", type=xbmcgui.INPUT_NUMERIC, option=xbmcgui.ALPHANUM_HIDE_INPUT)
 
-    success,msg = plex_network.switch_plex_home_user(user['id'], pin)
+    success, msg = plex_network.switch_plex_home_user(user['id'], pin)
 
     if not success:
         xbmcgui.Dialog().ok("Switch Failed",msg)
@@ -4009,13 +4008,13 @@ def start_plexbmc():
 
     # Now try and assign some data to them
     param_url = params.get('url')
-    command = None
+    command_name = None
 
     if param_url:
         if param_url.startswith('http') or param_url.startswith('file'):
             param_url = urllib.unquote(param_url)
         elif param_url.startswith('cmd'):
-            command = urllib.unquote(param_url).split(':')[1]
+            command_name = urllib.unquote(param_url).split(':')[1]
 
     param_name = urllib.unquote_plus(params.get('name', ""))
     mode = int(params.get('mode', -1))
@@ -4024,25 +4023,25 @@ def start_plexbmc():
     param_indirect = params.get('indirect')
     force = params.get('force')
 
-    if command is None:
+    if command_name is None:
         try:
-            command = sys.argv[1]
+            command_name = sys.argv[1]
         except:
             pass
 
-    if command == "cacherefresh":
+    if command_name == "cacherefresh":
         plex_network.delete_cache()
         xbmc.executebuiltin("ReloadSkin()")
     # Open the add-on settings page, then refresh plugin
-    elif command == "setting":
+    elif command_name == "setting":
         settings.open_settings()
         if xbmcgui.getCurrentWindowId() == 10000:
             printDebug.debug("Currently in home - refreshing to allow new settings to be taken")
             xbmc.executebuiltin("ReloadSkin()")
     # Refresh the current XBMC listing
-    elif command == "refresh":
+    elif command_name == "refresh":
         xbmc.executebuiltin("Container.Refresh")
-    elif command == "switchuser":
+    elif command_name == "switchuser":
         if switch_user():
             clear_skin_sections()
             clearOnDeckShelf()
@@ -4058,7 +4057,7 @@ def start_plexbmc():
         else:
             printDebug.info("Switch User Failed")
 
-    elif command == "signout":
+    elif command_name == "signout":
         if not plex_network.is_admin():
             return xbmcgui.Dialog().ok("Sign Out",
                                        "To sign out you must be logged in as an admin user. \
@@ -4077,18 +4076,18 @@ def start_plexbmc():
             clearShelf()
             xbmc.executebuiltin("ReloadSkin()")
 
-    elif command == "signin":
+    elif command_name == "signin":
         from myplex_dialogs import PlexSigninDialog
         signin_window = PlexSigninDialog('Myplex Login')
         signin_window.set_authentication_target(plex_network)
         signin_window.start()
         del signin_window
 
-    elif command == "signintemp":
+    elif command_name == "signintemp":
         # Awful hack to get around running a script from a listitem..
         xbmc.executebuiltin('XBMC.RunScript(plugin.video.plexbmc, signin)')
 
-    elif command == "managemyplex":
+    elif command_name == "managemyplex":
         if not plex_network.is_myplex_signedin():
             ret = xbmcgui.Dialog().yesno("Manage myplex",
                                          "You are not currently logged into myplex.\
@@ -4112,40 +4111,40 @@ def start_plexbmc():
         plex_network.load()
 
         # Populate Skin variables
-        if command == "skin":
+        if command_name == "skin":
             try:
                 skin_type = sys.argv[2]
             except:
                 skin_type = None
             skin(type=skin_type)
 
-        elif command == "amberskin":
+        elif command_name == "amberskin":
             amberskin()
 
         # Populate recently/on deck shelf items
-        elif command == "shelf":
+        elif command_name == "shelf":
             shelf()
 
         # Populate channel recently viewed items
-        elif command == "channelShelf":
+        elif command_name == "channelShelf":
             shelfChannel()
             pass
 
         # Send a library update to Plex
-        elif command == "update":
+        elif command_name == "update":
             server_uuid = sys.argv[2]
             section_id = sys.argv[3]
             libraryRefresh(server_uuid, section_id)
 
         # Mark an item as watched/unwatched in plex
-        elif command == "watch":
+        elif command_name == "watch":
             server_uuid = sys.argv[2]
             metadata_id = sys.argv[3]
             watch_status = sys.argv[4]
             watched(server_uuid, metadata_id, watch_status)
 
         # nt currently used
-        elif command == "refreshplexbmc":
+        elif command_name == "refreshplexbmc":
             plex_network.discover()
             server_list = plex_network.get_server_list()
             skin(server_list)
@@ -4153,25 +4152,25 @@ def start_plexbmc():
             shelfChannel(server_list)
 
         # delete media from PMS
-        elif command == "delete":
+        elif command_name == "delete":
             server_uuid = sys.argv[2]
             metadata_id = sys.argv[3]
             deleteMedia(server_uuid, metadata_id)
 
         # Display subtitle selection screen
-        elif command == "subs":
+        elif command_name == "subs":
             server_uuid = sys.argv[2]
             metadata_id = sys.argv[3]
             alterSubs(server_uuid, metadata_id)
 
-        # Display audio streanm selection screen
-        elif command == "audio":
+        # Display audio stream selection screen
+        elif command_name == "audio":
             server_uuid = sys.argv[2]
             metadata_id = sys.argv[3]
             alterAudio(server_uuid, metadata_id)
 
-        # Allow a mastre server to be selected (for myplex queue)
-        elif command == "master":
+        # Allow a master server to be selected (for myplex queue)
+        elif command_name == "master":
             setMasterServer()
 
         # else move to the main code
@@ -4179,7 +4178,7 @@ def start_plexbmc():
 
             global pluginhandle
             try:
-                pluginhandle = int(command)
+                pluginhandle = int(command_name)
             except:
                 pass
 

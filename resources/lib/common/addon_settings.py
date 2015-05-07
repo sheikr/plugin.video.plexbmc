@@ -1,10 +1,13 @@
 import xbmcaddon
 
+from .constants import ADDON_NAMESPACE
+
 
 class AddonSettings(object):
     def __init__(self):
         print "PleXBMC -> Reading settings configuration"
-        self.settings = xbmcaddon.Addon('plugin.video.plexbmc')
+
+        self.settings = xbmcaddon.Addon(ADDON_NAMESPACE)
         self.stream = self.settings.getSetting('streaming')
 
     def open_settings(self):

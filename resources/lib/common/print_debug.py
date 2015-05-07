@@ -24,8 +24,6 @@ class PrintDebug(object):
         else:
             self.sub = ''
 
-
-
         self.level = settings.get_debug()
         self.token_regex = re.compile('-Token=[a-z|0-9].*[&|$]')
         self.ip_regex = re.compile('\.\d{1,3}\.\d{1,3}\.')

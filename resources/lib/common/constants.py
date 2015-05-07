@@ -31,6 +31,9 @@ def __setup_python_locations():
     sys.path.append(setup['__resources__'])
     return setup
 
+
+ADDON_NAMESPACE = 'plugin.video.plexbmc'
+
 GLOBAL_SETUP = __setup_python_locations()
 GLOBAL_SETUP['platform'] = __get_platform()
 GENERIC_THUMBNAIL = "%s/resource/thumb.png" % GLOBAL_SETUP['__cwd__']
