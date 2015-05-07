@@ -13,12 +13,12 @@ class CommandSignout(BaseCommand):
     def execute(self):
         if not plex_network.is_admin():
             return xbmcgui.Dialog().ok("Sign Out",
-                                       "To sign out you must be logged in as an admin user. \
-                                       Please switch user and try again")
+                                       "To sign out you must be logged in as an admin user.",
+                                       "Please switch user and try again")
 
         ret = xbmcgui.Dialog().yesno("myplex",
-                                     "You are currently signed into myPlex. \
-                                     Are you sure you want to sign out?")
+                                     "You are currently signed into myPlex.",
+                                     "Are you sure you want to sign out?")
         if ret:
             plex_network.signout()
             window = xbmcgui.Window(10000)
