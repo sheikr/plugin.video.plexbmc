@@ -6,7 +6,7 @@ from ..common import PrintDebug, AddonSettings, clear_skin_sections
 from ..common.constants import *
 
 settings = AddonSettings()
-printDebug = PrintDebug("commands")
+printDebug = PrintDebug("PleXBMC", "CommandSkin")
 
 
 class CommandSkin(BaseCommand):

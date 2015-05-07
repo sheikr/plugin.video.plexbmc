@@ -4,7 +4,7 @@ import xbmcgui
 from .base_command import BaseCommand
 from ..common import PrintDebug, AddonSettings
 settings = AddonSettings()
-printDebug = PrintDebug("commands")
+printDebug = PrintDebug("PleXBMC", "CommandSettings")
 
 
 class CommandSettings(BaseCommand):

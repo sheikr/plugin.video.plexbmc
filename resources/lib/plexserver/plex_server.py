@@ -12,7 +12,7 @@ from ..common import REQUIRED_REVISION, GLOBAL_SETUP
 DEFAULT_PORT = "32400"
 
 settings = AddonSettings()
-printDebug = PrintDebug("PleXBMC", "plexserver")
+printDebug = PrintDebug("PleXBMC", "PlexMediaServer")
 printDebug.debug("Using Requests version for HTTP: %s" % requests.__version__)
 
 

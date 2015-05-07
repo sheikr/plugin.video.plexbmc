@@ -13,7 +13,7 @@ from ..common import is_ip  # shared func
 
 settings = AddonSettings()
 
-printDebug = PrintDebug("PleXBMC", "plex")
+printDebug = PrintDebug("PleXBMC", "Plex")
 DEFAULT_PORT = "32400"
 
 

@@ -40,6 +40,8 @@ from .common import clear_shelf, get_link_url
 from .common.constants import *
 from .plexserver import plex_network, get_master_server
 
+from .commands import COMMANDS, BaseCommand
+
 settings = AddonSettings()
 
 
@@ -3069,8 +3071,6 @@ else:
     print "PleXBMC -> Debug is turned off.  Running silent"
 
 pluginhandle = 0
-
-from commands import COMMANDS, BaseCommand
 
 
 def start_plexbmc():

@@ -10,7 +10,7 @@ from ..common import clear_skin_sections, clear_shelf, clear_on_deck_shelf, get_
 from ..common.constants import *
 
 settings = AddonSettings()
-printDebug = PrintDebug("commands")
+printDebug = PrintDebug("PleXBMC", "CommandAmberSkin")
 
 
 class CommandAmberSkin(BaseCommand):

@@ -6,7 +6,7 @@ from ..plexserver import plex_network
 from ..common import PrintDebug
 from ..common import clear_shelf, clear_skin_sections, clear_on_deck_shelf
 
-printDebug = PrintDebug("commands")
+printDebug = PrintDebug("PleXBMC", "CommandSwitchUser")
 
 
 class CommandSwitchUser(BaseCommand):
