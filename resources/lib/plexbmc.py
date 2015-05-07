@@ -3191,6 +3191,7 @@ def start_plexbmc():
 
     # else move to the main code
     else:
+        plex_network.load()
         global pluginhandle
         try:
             pluginhandle = int(command_name)
