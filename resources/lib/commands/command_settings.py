@@ -8,8 +8,8 @@ printDebug = PrintDebug("commands")
 
 
 class CommandSettings(BaseCommand):
-    def __init__(self):
-        super(CommandSettings, self).__init__()
+    def __init__(self, *args):
+        super(CommandSettings, self).__init__(args)
 
     def execute(self):
         settings.open_settings()

@@ -4,8 +4,8 @@ from ..myplex_dialogs import PlexSigninDialog
 
 
 class CommandSignin(BaseCommand):
-    def __init__(self):
-        super(CommandSignin, self).__init__()
+    def __init__(self, *args):
+        super(CommandSignin, self).__init__(args)
 
     def execute(self):
         signin_window = PlexSigninDialog('Myplex Login')

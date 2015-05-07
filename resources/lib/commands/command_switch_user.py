@@ -10,8 +10,8 @@ printDebug = PrintDebug("commands")
 
 
 class CommandSwitchUser(BaseCommand):
-    def __init__(self):
-        super(CommandSwitchUser, self).__init__()
+    def __init__(self, *args):
+        super(CommandSwitchUser, self).__init__(args)
 
     def execute(self):
         if self.switch_user():

@@ -3891,191 +3891,197 @@ def start_plexbmc():
         except:
             pass
 
-    # todo pass parameters to constructor
-    command = COMMANDS.get(command_name)()
+    args = sys.argv[2:]
+    command = COMMANDS.get(command_name)(args)
     if command and isinstance(command, BaseCommand):
         command.execute()
 
-    else:
-
+    # Populate Skin variables
+    elif command_name == "skin":
         plex_network.load()
+        try:
+            skin_type = sys.argv[2]
+        except:
+            skin_type = None
+        skin(type=skin_type)
 
-        # Populate Skin variables
-        if command_name == "skin":
-            try:
-                skin_type = sys.argv[2]
-            except:
-                skin_type = None
-            skin(type=skin_type)
+    elif command_name == "amberskin":
+        plex_network.load()
+        amberskin()
 
-        elif command_name == "amberskin":
-            amberskin()
+    # Populate recently/on deck shelf items
+    elif command_name == "shelf":
+        plex_network.load()
+        shelf()
 
-        # Populate recently/on deck shelf items
-        elif command_name == "shelf":
-            shelf()
+    # Populate channel recently viewed items
+    elif command_name == "channelShelf":
+        plex_network.load()
+        shelfChannel()
+        pass
 
-        # Populate channel recently viewed items
-        elif command_name == "channelShelf":
-            shelfChannel()
+    # Send a library update to Plex
+    elif command_name == "update":
+        plex_network.load()
+        server_uuid = sys.argv[2]
+        section_id = sys.argv[3]
+        libraryRefresh(server_uuid, section_id)
+
+    # Mark an item as watched/unwatched in plex
+    elif command_name == "watch":
+        plex_network.load()
+        server_uuid = sys.argv[2]
+        metadata_id = sys.argv[3]
+        watch_status = sys.argv[4]
+        watched(server_uuid, metadata_id, watch_status)
+
+    # nt currently used
+    elif command_name == "refreshplexbmc":
+        plex_network.load()
+        plex_network.discover()
+        server_list = plex_network.get_server_list()
+        skin(server_list)
+        shelf(server_list)
+        shelfChannel(server_list)
+
+    # delete media from PMS
+    elif command_name == "delete":
+        plex_network.load()
+        server_uuid = sys.argv[2]
+        metadata_id = sys.argv[3]
+        deleteMedia(server_uuid, metadata_id)
+
+    # Display subtitle selection screen
+    elif command_name == "subs":
+        plex_network.load()
+        server_uuid = sys.argv[2]
+        metadata_id = sys.argv[3]
+        alterSubs(server_uuid, metadata_id)
+
+    # Display audio stream selection screen
+    elif command_name == "audio":
+        plex_network.load()
+        server_uuid = sys.argv[2]
+        metadata_id = sys.argv[3]
+        alterAudio(server_uuid, metadata_id)
+
+    # Allow a master server to be selected (for myplex queue)
+    elif command_name == "master":
+        plex_network.load()
+        setMasterServer()
+
+    # else move to the main code
+    else:
+        global pluginhandle
+        try:
+            pluginhandle = int(command_name)
+        except:
             pass
 
-        # Send a library update to Plex
-        elif command_name == "update":
-            server_uuid = sys.argv[2]
-            section_id = sys.argv[3]
-            libraryRefresh(server_uuid, section_id)
+        WINDOW = xbmcgui.Window(xbmcgui.getCurrentWindowId())
+        WINDOW.clearProperty("heading")
+        WINDOW.clearProperty("heading2")
 
-        # Mark an item as watched/unwatched in plex
-        elif command_name == "watch":
-            server_uuid = sys.argv[2]
-            metadata_id = sys.argv[3]
-            watch_status = sys.argv[4]
-            watched(server_uuid, metadata_id, watch_status)
+        if settings.get_debug() >= printDebug.DEBUG_INFO:
+            print "PleXBMC -> Mode: %s " % mode
+            print "PleXBMC -> URL: %s" % param_url
+            print "PleXBMC -> Name: %s" % param_name
+            print "PleXBMC -> identifier: %s" % param_identifier
 
-        # nt currently used
-        elif command_name == "refreshplexbmc":
-            plex_network.discover()
-            server_list = plex_network.get_server_list()
-            skin(server_list)
-            shelf(server_list)
-            shelfChannel(server_list)
+        # Run a function based on the mode variable that was passed in the URL
+        if (mode is None) or (param_url is None) or (len(param_url) < 1):
+            displaySections()
 
-        # delete media from PMS
-        elif command_name == "delete":
-            server_uuid = sys.argv[2]
-            metadata_id = sys.argv[3]
-            deleteMedia(server_uuid, metadata_id)
+        elif mode == MODE_GETCONTENT:
+            getContent(param_url)
 
-        # Display subtitle selection screen
-        elif command_name == "subs":
-            server_uuid = sys.argv[2]
-            metadata_id = sys.argv[3]
-            alterSubs(server_uuid, metadata_id)
+        elif mode == MODE_TVSHOWS:
+            TVShows(param_url)
 
-        # Display audio stream selection screen
-        elif command_name == "audio":
-            server_uuid = sys.argv[2]
-            metadata_id = sys.argv[3]
-            alterAudio(server_uuid, metadata_id)
+        elif mode == MODE_MOVIES:
+            Movies(param_url)
 
-        # Allow a master server to be selected (for myplex queue)
-        elif command_name == "master":
-            setMasterServer()
+        elif mode == MODE_ARTISTS:
+            artist(param_url)
 
-        # else move to the main code
-        else:
+        elif mode == MODE_TVSEASONS:
+            TVSeasons(param_url)
 
-            global pluginhandle
-            try:
-                pluginhandle = int(command_name)
-            except:
-                pass
+        elif mode == MODE_PLAYLIBRARY:
+            playLibraryMedia(param_url, force=force, override=play_transcode)
 
-            WINDOW = xbmcgui.Window(xbmcgui.getCurrentWindowId())
-            WINDOW.clearProperty("heading")
-            WINDOW.clearProperty("heading2")
+        elif mode == MODE_PLAYSHELF:
+            playLibraryMedia(param_url, full_data=True, shelf=True)
 
-            if settings.get_debug() >= printDebug.DEBUG_INFO:
-                print "PleXBMC -> Mode: %s " % mode
-                print "PleXBMC -> URL: %s" % param_url
-                print "PleXBMC -> Name: %s" % param_name
-                print "PleXBMC -> identifier: %s" % param_identifier
+        elif mode == MODE_TVEPISODES:
+            TVEpisodes(param_url)
 
-            # Run a function based on the mode variable that was passed in the URL
-            if (mode is None) or (param_url is None) or (len(param_url) < 1):
-                displaySections()
+        elif mode == MODE_PLEXPLUGINS:
+            PlexPlugins(param_url)
 
-            elif mode == MODE_GETCONTENT:
-                getContent(param_url)
+        elif mode == MODE_PROCESSXML:
+            processXML(param_url)
 
-            elif mode == MODE_TVSHOWS:
-                TVShows(param_url)
+        elif mode == MODE_BASICPLAY:
+            PLAY(param_url)
 
-            elif mode == MODE_MOVIES:
-                Movies(param_url)
+        elif mode == MODE_ALBUMS:
+            albums(param_url)
 
-            elif mode == MODE_ARTISTS:
-                artist(param_url)
+        elif mode == MODE_TRACKS:
+            tracks(param_url)
 
-            elif mode == MODE_TVSEASONS:
-                TVSeasons(param_url)
+        elif mode == MODE_PHOTOS:
+            photo(param_url)
 
-            elif mode == MODE_PLAYLIBRARY:
-                playLibraryMedia(param_url, force=force, override=play_transcode)
+        elif mode == MODE_MUSIC:
+            music(param_url)
 
-            elif mode == MODE_PLAYSHELF:
-                playLibraryMedia(param_url, full_data=True, shelf=True)
+        elif mode == MODE_VIDEOPLUGINPLAY:
+            videoPluginPlay(param_url, param_identifier, param_indirect)
 
-            elif mode == MODE_TVEPISODES:
-                TVEpisodes(param_url)
+        elif mode == MODE_PLEXONLINE:
+            plexOnline(param_url)
 
-            elif mode == MODE_PLEXPLUGINS:
-                PlexPlugins(param_url)
+        elif mode == MODE_CHANNELINSTALL:
+            install(param_url, param_name)
 
-            elif mode == MODE_PROCESSXML:
-                processXML(param_url)
+        elif mode == MODE_CHANNELVIEW:
+            channelView(param_url)
 
-            elif mode == MODE_BASICPLAY:
-                PLAY(param_url)
+        elif mode == MODE_PLAYLIBRARY_TRANSCODE:
+            playLibraryMedia(param_url, override=True)
 
-            elif mode == MODE_ALBUMS:
-                albums(param_url)
+        elif mode == MODE_MYPLEXQUEUE:
+            myPlexQueue()
 
-            elif mode == MODE_TRACKS:
-                tracks(param_url)
+        elif mode == MODE_CHANNELSEARCH:
+            channelSearch(param_url, params.get('prompt'))
 
-            elif mode == MODE_PHOTOS:
-                photo(param_url)
+        elif mode == MODE_CHANNELPREFS:
+            channelSettings(param_url, params.get('id'))
 
-            elif mode == MODE_MUSIC:
-                music(param_url)
+        elif mode == MODE_SHARED_MOVIES:
+            displaySections(filter="movies", display_shared=True)
 
-            elif mode == MODE_VIDEOPLUGINPLAY:
-                videoPluginPlay(param_url, param_identifier, param_indirect)
+        elif mode == MODE_SHARED_SHOWS:
+            displaySections(filter="tvshows", display_shared=True)
 
-            elif mode == MODE_PLEXONLINE:
-                plexOnline(param_url)
+        elif mode == MODE_SHARED_PHOTOS:
+            displaySections(filter="photos", display_shared=True)
 
-            elif mode == MODE_CHANNELINSTALL:
-                install(param_url, param_name)
+        elif mode == MODE_SHARED_MUSIC:
+            displaySections(filter="music", display_shared=True)
 
-            elif mode == MODE_CHANNELVIEW:
-                channelView(param_url)
+        elif mode == MODE_SHARED_ALL:
+            displaySections(display_shared=True)
 
-            elif mode == MODE_PLAYLIBRARY_TRANSCODE:
-                playLibraryMedia(param_url, override=True)
+        elif mode == MODE_DELETE_REFRESH:
+            plex_network.delete_cache()
+            xbmc.executebuiltin("Container.Refresh")
 
-            elif mode == MODE_MYPLEXQUEUE:
-                myPlexQueue()
+        elif mode == MODE_PLAYLISTS:
+            processXML(param_url)
 
-            elif mode == MODE_CHANNELSEARCH:
-                channelSearch(param_url, params.get('prompt'))
-
-            elif mode == MODE_CHANNELPREFS:
-                channelSettings(param_url, params.get('id'))
-
-            elif mode == MODE_SHARED_MOVIES:
-                displaySections(filter="movies", display_shared=True)
-
-            elif mode == MODE_SHARED_SHOWS:
-                displaySections(filter="tvshows", display_shared=True)
-
-            elif mode == MODE_SHARED_PHOTOS:
-                displaySections(filter="photos", display_shared=True)
-
-            elif mode == MODE_SHARED_MUSIC:
-                displaySections(filter="music", display_shared=True)
-
-            elif mode == MODE_SHARED_ALL:
-                displaySections(display_shared=True)
-
-            elif mode == MODE_DELETE_REFRESH:
-                plex_network.delete_cache()
-                xbmc.executebuiltin("Container.Refresh")
-
-            elif mode == MODE_PLAYLISTS:
-                processXML(param_url)
-
-            elif mode == MODE_DISPLAYSERVERS:
-                displayServers(param_url)
+        elif mode == MODE_DISPLAYSERVERS:
+            displayServers(param_url)

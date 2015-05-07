@@ -6,8 +6,8 @@ from ..plexserver import plex_network
 
 
 class CommandManageMyPlex(BaseCommand):
-    def __init__(self):
-        super(CommandManageMyPlex, self).__init__()
+    def __init__(self, *args):
+        super(CommandManageMyPlex, self).__init__(args)
 
     def execute(self):
         if not plex_network.is_myplex_signedin():

@@ -3,8 +3,8 @@ import xbmc
 
 
 class CommandSigninTemp(BaseCommand):
-    def __init__(self):
-        super(CommandSigninTemp, self).__init__()
+    def __init__(self, *args):
+        super(CommandSigninTemp, self).__init__(args)
 
     def execute(self):
         # Awful hack to get around running a script from a listitem..
