@@ -3893,96 +3893,11 @@ def start_plexbmc():
 
     # todo pass parameters to constructor
     command = COMMANDS.get(command_name)()
-
-    # region Done commands
-    """
-    if command_name == "cacherefresh":
-        plex_network.delete_cache()
-        xbmc.executebuiltin("ReloadSkin()")
-
-    # Open the add-on settings page, then refresh plugin
-    elif command_name == "setting":
-        settings.open_settings()
-        if xbmcgui.getCurrentWindowId() == 10000:
-            printDebug.debug("Currently in home - refreshing to allow new settings to be taken")
-            xbmc.executebuiltin("ReloadSkin()")
-
-    # Refresh the current XBMC listing
-    elif command_name == "refresh":
-        xbmc.executebuiltin("Container.Refresh")
-
-    elif command_name == "switchuser":
-        if switch_user():
-            clear_skin_sections()
-            clearOnDeckShelf()
-            clearShelf()
-            WINDOW = xbmcgui.Window(10000)
-            WINDOW.setProperty("plexbmc.plexhome_user", str(plex_network.get_myplex_user()))
-            WINDOW.setProperty("plexbmc.plexhome_avatar", str(plex_network.get_myplex_avatar()))
-            if xbmcgui.getCurrentWindowId() == 10000:
-                printDebug.debug("Currently in home - refreshing to allow new settings to be taken")
-                xbmc.executebuiltin("ReloadSkin()")
-            else:
-                xbmc.executebuiltin("Container.Refresh")
-        else:
-            printDebug.info("Switch User Failed")
-    """
-    # endregion
-
     if command and isinstance(command, BaseCommand):
         command.execute()
 
-    elif command_name == "signout":
-        if not plex_network.is_admin():
-            return xbmcgui.Dialog().ok("Sign Out",
-                                       "To sign out you must be logged in as an admin user. \
-                                       Please switch user and try again")
-
-        ret = xbmcgui.Dialog().yesno("myplex",
-                                     "You are currently signed into myPlex. \
-                                     Are you sure you want to sign out?")
-        if ret:
-            plex_network.signout()
-            WINDOW = xbmcgui.Window(10000)
-            WINDOW.clearProperty("plexbmc.plexhome_user" )
-            WINDOW.clearProperty("plexbmc.plexhome_avatar" )
-            clear_skin_sections()
-            clear_on_deck_shelf()
-            clear_shelf()
-            xbmc.executebuiltin("ReloadSkin()")
-
-    elif command_name == "signin":
-        from myplex_dialogs import PlexSigninDialog
-        signin_window = PlexSigninDialog('Myplex Login')
-        signin_window.set_authentication_target(plex_network)
-        signin_window.start()
-        del signin_window
-
-    elif command_name == "signintemp":
-        # Awful hack to get around running a script from a listitem..
-        xbmc.executebuiltin('XBMC.RunScript(plugin.video.plexbmc, signin)')
-
-    elif command_name == "managemyplex":
-        if not plex_network.is_myplex_signedin():
-            ret = xbmcgui.Dialog().yesno("Manage myplex",
-                                         "You are not currently logged into myplex.\
-                                         Please continue to sign in, or cancel to return")
-            if ret:
-                xbmc.executebuiltin('XBMC.RunScript(plugin.video.plexbmc, signin)')
-            else:
-                return
-        elif not plex_network.is_admin():
-            return xbmcgui.Dialog().ok("Manage myplex",
-                                       "To access these screens you must be logged in as an admin user.\
-                                       Please switch user and try again")
-
-        from myplex_dialogs import PlexManageDialog
-        manage_window = PlexManageDialog('Manage myplex')
-        manage_window.set_authentication_target(plex_network)
-        manage_window.start()
-        del manage_window
-
     else:
+
         plex_network.load()
 
         # Populate Skin variables

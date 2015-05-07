@@ -3,10 +3,9 @@ import xbmcgui
 
 from .base_command import BaseCommand
 from ..plexserver import plex_network
-from ..common import PrintDebug, AddonSettings
+from ..common import PrintDebug
 from ..common import clear_shelf, clear_skin_sections, clear_on_deck_shelf
 
-settings = AddonSettings()
 printDebug = PrintDebug("commands")
 
 
