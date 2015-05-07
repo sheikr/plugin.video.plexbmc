@@ -5,15 +5,14 @@ import time
 import requests
 import uuid
 
-from resources.lib.common import *
-from plex_section import PlexSection
-
-settings = AddonSettings()
-
-printDebug = PrintDebug("PleXBMC", "plexserver")
+from .plex_section import PlexSection
+from ..common import REQUIRED_REVISION, GLOBAL_SETUP
+from ..common import AddonSettings, PrintDebug
 
 DEFAULT_PORT = "32400"
 
+settings = AddonSettings()
+printDebug = PrintDebug("PleXBMC", "plexserver")
 printDebug.debug("Using Requests version for HTTP: %s" % requests.__version__)
 
 

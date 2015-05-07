@@ -1,6 +1,5 @@
-__author__ = 'Dukobpa3'
-from .base_command import BaseCommand
 import xbmc
+from .base_command import BaseCommand
 
 
 class CommandRefresh(BaseCommand):

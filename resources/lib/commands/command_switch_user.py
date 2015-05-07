@@ -4,6 +4,7 @@ import xbmcgui
 from .base_command import BaseCommand
 from ..plexserver import plex_network
 from ..common import PrintDebug, AddonSettings
+from ..common import clear_shelf, clear_skin_sections, clear_on_deck_shelf
 
 settings = AddonSettings()
 printDebug = PrintDebug("commands")
@@ -16,11 +17,11 @@ class CommandSwitchUser(BaseCommand):
     def execute(self):
         if self.switch_user():
             clear_skin_sections()
-            clearOnDeckShelf()
-            clearShelf()
-            WINDOW = xbmcgui.Window(10000)
-            WINDOW.setProperty("plexbmc.plexhome_user", str(plex_network.get_myplex_user()))
-            WINDOW.setProperty("plexbmc.plexhome_avatar", str(plex_network.get_myplex_avatar()))
+            clear_on_deck_shelf()
+            clear_shelf()
+            window = xbmcgui.Window(10000)
+            window.setProperty("plexbmc.plexhome_user", str(plex_network.get_myplex_user()))
+            window.setProperty("plexbmc.plexhome_avatar", str(plex_network.get_myplex_avatar()))
             if xbmcgui.getCurrentWindowId() == 10000:
                 printDebug.debug("Currently in home - refreshing to allow new settings to be taken")
                 xbmc.executebuiltin("ReloadSkin()")
@@ -60,7 +61,7 @@ class CommandSwitchUser(BaseCommand):
         success, msg = plex_network.switch_plex_home_user(user['id'], pin)
 
         if not success:
-            xbmcgui.Dialog().ok("Switch Failed",msg)
+            xbmcgui.Dialog().ok("Switch Failed", msg)
             return False
 
         return True

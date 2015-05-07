@@ -5,11 +5,11 @@ import uuid
 
 import requests
 
-from plex_server import PlexMediaServer
-from plex_gdm import PlexGdm
-from common import GLOBAL_SETUP, REQUIRED_REVISION  # const and singletones
-from common import PrintDebug, CacheControl, AddonSettings  # types
-from common import is_ip  # shared func
+from .plex_server import PlexMediaServer
+from .plex_gdm import PlexGdm
+from ..common import GLOBAL_SETUP, REQUIRED_REVISION  # const and singletones
+from ..common import PrintDebug, CacheControl, AddonSettings  # types
+from ..common import is_ip  # shared func
 
 settings = AddonSettings()
 

@@ -29,7 +29,7 @@ import threading
 import time
 import urllib2
 
-from resources.lib.common import *
+from ..common import PrintDebug
 
 
 class PlexGdm:
@@ -63,7 +63,7 @@ class PlexGdm:
                             Port: %s\n \
                             Product: %s\n \
                             Version: %s" \
-                            % (c_id, c_name, c_post, c_product, c_version)
+                           % (c_id, c_name, c_post, c_product, c_version)
         self.client_id = c_id
 
     def getClientDetails(self):

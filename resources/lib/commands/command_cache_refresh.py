@@ -1,8 +1,6 @@
+import xbmc
 from .base_command import BaseCommand
 from ..plexserver import plex_network
-import xbmc
-
-__author__ = 'oburdun'
 
 
 class CommandCacheRefresh(BaseCommand):

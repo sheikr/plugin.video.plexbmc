@@ -1,8 +1,7 @@
-__author__ = 'Dukobpa3'
-from .base_command import BaseCommand
 import xbmc
 import xbmcgui
 
+from .base_command import BaseCommand
 from ..common import PrintDebug, AddonSettings
 settings = AddonSettings()
 printDebug = PrintDebug("commands")
