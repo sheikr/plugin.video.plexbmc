@@ -1,5 +1,5 @@
 from .base_command import BaseCommand
-from resources.lib.plexserver import plex_network
+from ..plexserver import plex_network
 import xbmc
 
 __author__ = 'oburdun'
