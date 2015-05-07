@@ -9,7 +9,7 @@ from .command_manage_my_plex import CommandManageMyPlex
 
 
 COMMAND_CACHE_REFRESH = "cacherefresh"
-COMMAND_SETTINGS = "settings"
+COMMAND_SETTINGS = "setting"
 COMMAND_REFRESH = "refresh"
 COMMAND_SWITCH_USER = "switchuser"
 COMMAND_SIGNOUT = "signout"
