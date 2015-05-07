@@ -1,6 +1,7 @@
 import xbmcaddon
 
-from .constants import ADDON_NAMESPACE
+
+ADDON_NAMESPACE = 'plugin.video.plexbmc'
 
 
 class AddonSettings(object):

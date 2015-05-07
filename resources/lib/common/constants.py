@@ -1,8 +1,6 @@
 from .private_func import setup_python_locations, get_platform
 
 
-ADDON_NAMESPACE = 'plugin.video.plexbmc'
-
 GLOBAL_SETUP = setup_python_locations()
 GLOBAL_SETUP['platform'] = get_platform()
 GENERIC_THUMBNAIL = "%s/resource/thumb.png" % GLOBAL_SETUP['__cwd__']

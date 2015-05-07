@@ -3892,9 +3892,9 @@ def start_plexbmc():
             pass
 
     args = sys.argv[2:]
-    command = COMMANDS.get(command_name)(args)
-    if command and isinstance(command, BaseCommand):
-        command.execute()
+    command = COMMANDS.get(command_name)
+    if command and issubclass(command, BaseCommand):
+        command(args).execute()
 
     # Populate Skin variables
     elif command_name == "skin":
