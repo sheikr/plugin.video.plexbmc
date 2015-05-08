@@ -7,7 +7,7 @@ import requests
 
 from .plex_server import PlexMediaServer
 from .plex_gdm import PlexGdm
-from ..common import GlobalEnum  # const and singletones
+from ..common import GLOBAL_SETUP, REQUIRED_REVISION  # const
 from ..common import PrintDebug, CacheControl, AddonSettings  # types
 from ..utils import is_ip
 
@@ -21,7 +21,7 @@ class Plex:
     def __init__(self, load=False):
         # Provide an interface into Plex
 
-        self.cache = CacheControl(GlobalEnum.GLOBAL_SETUP['__cachedir__'] + "cache/servers", settings.get_setting('cache'))
+        self.cache = CacheControl(GLOBAL_SETUP['__cachedir__'] + "cache/servers", settings.get_setting('cache'))
         self.myplex_server = 'https://plex.tv'
         self.myplex_user = None
         self.myplex_token = None
@@ -203,7 +203,7 @@ class Plex:
     def check_server_version(self):
         for uuid, servers in self.server_list.iteritems():
             try:
-                if not servers.get_revision() == GlobalEnum.REQUIRED_REVISION:
+                if not servers.get_revision() == REQUIRED_REVISION:
                     printDebug.debug("Old object revision found")
                     return False
             except:
@@ -242,8 +242,8 @@ class Plex:
                   'X-Plex-Platform': 'PleXBMC',
                   'X-Plex-Client-Identifier': self.get_client_identifier(),
                   'X-Plex-Product': 'PleXBMC',
-                  'X-Plex-Platform-Version': GlobalEnum.GLOBAL_SETUP['platform'],
-                  'X-Plex-Version': GlobalEnum.GLOBAL_SETUP['__version__'],
+                  'X-Plex-Platform-Version': GLOBAL_SETUP['platform'],
+                  'X-Plex-Version': GLOBAL_SETUP['__version__'],
                   'X-Plex-Provides': "player"}
         if self.effective_token is not None:
             header['X-Plex-Token'] = self.effective_token
