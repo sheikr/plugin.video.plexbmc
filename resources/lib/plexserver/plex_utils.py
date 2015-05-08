@@ -1,7 +1,7 @@
 from ..common import PrintDebug, AddonSettings
 from .plex import plex_network
 
-printDebug = PrintDebug("PleXBMC", "plex_utils")
+printDebug = PrintDebug("PleXBMC", "plexserver.plex_utils")
 settings = AddonSettings()
 
 

@@ -3,7 +3,7 @@ import xbmcgui
 
 from .base_command import BaseCommand
 from ..plexserver import plex_network
-from ..common import clear_shelf, clear_skin_sections, clear_on_deck_shelf
+from ..utils import clear_shelf, clear_skin_sections, clear_on_deck_shelf
 
 
 class CommandSignout(BaseCommand):

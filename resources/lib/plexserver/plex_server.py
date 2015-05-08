@@ -6,8 +6,7 @@ import requests
 import uuid
 
 from .plex_section import PlexSection
-from ..common import AddonSettings, PrintDebug
-from ..common import REQUIRED_REVISION, GLOBAL_SETUP
+from ..common import AddonSettings, PrintDebug, REQUIRED_REVISION, GLOBAL_SETUP
 
 DEFAULT_PORT = "32400"
 

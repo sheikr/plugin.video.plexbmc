@@ -1,8 +1,8 @@
-import pyxbmct.addonwindow as pyxbmct
-from common import PrintDebug, GLOBAL_SETUP
 import xbmc
+import pyxbmct.addonwindow as pyxbmct
+from .common import PrintDebug, GLOBAL_SETUP
 
-printDebug = PrintDebug("PleXBMC", "plex_signin")
+printDebug = PrintDebug("PleXBMC", "plex_dialogs")
 
 
 class PlexSigninDialog(pyxbmct.AddonFullWindow):

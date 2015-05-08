@@ -35,9 +35,10 @@ import xbmc
 import xbmcplugin
 import xbmcgui
 
-from .common import AddonSettings, wake_servers, PrintDebug
-from .common import clear_shelf, get_link_url
-from .common.constants import *
+from .utils import wake_servers, get_link_url
+from .utils import clear_shelf
+
+from .common import AddonSettings, PrintDebug, EnumMode, EnumSubAudioControl, GENERIC_THUMBNAIL, GLOBAL_SETUP
 from .plexserver import plex_network, get_master_server
 
 from .commands import COMMANDS, BaseCommand
@@ -266,22 +267,22 @@ def displaySections( filter=None, display_shared=False ):
             path=section.get_path()
 
             if section.is_show():
-                mode=MODE_TVSHOWS
+                mode=EnumMode.TVSHOWS
                 if (filter is not None) and (filter != "tvshows"):
                     continue
 
             elif section.is_movie():
-                mode=MODE_MOVIES
+                mode=EnumMode.MOVIES
                 if (filter is not None) and (filter != "movies"):
                     continue
 
             elif section.is_artist():
-                mode=MODE_ARTISTS
+                mode=EnumMode.ARTISTS
                 if (filter is not None) and (filter != "music"):
                     continue
 
             elif section.is_photo():
-                mode=MODE_PHOTOS
+                mode=EnumMode.PHOTOS
                 if (filter is not None) and (filter != "photos"):
                     continue
             else:
@@ -289,7 +290,7 @@ def displaySections( filter=None, display_shared=False ):
                 continue
 
             if settings.get_setting('secondary'):
-                mode=MODE_GETCONTENT
+                mode=EnumMode.GETCONTENT
             else:
                 path=path+'/all'
 
@@ -311,7 +312,7 @@ def displaySections( filter=None, display_shared=False ):
 
     #For each of the servers we have identified
     if plex_network.is_myplex_signedin():
-        addGUIItem('http://myplexqueue', {'title': 'myplex Queue'}, {'type': 'Video', 'mode': MODE_MYPLEXQUEUE})
+        addGUIItem('http://myplexqueue', {'title': 'myplex Queue'}, {'type': 'Video', 'mode': EnumMode.MYPLEXQUEUE})
 
     for server in server_list:
 
@@ -330,14 +331,14 @@ def displaySections( filter=None, display_shared=False ):
         details={'title' : prefix+"Channels" }
         extraData={'type' : "Video"}
 
-        extraData['mode']=MODE_CHANNELVIEW
+        extraData['mode']=EnumMode.CHANNELVIEW
         u="%s/channels/all" % server.get_url_location()
         addGUIItem(u,details,extraData)
 
         #Create plexonline link
         details['title']=prefix+"Plex Online"
         extraData['type'] = "file"
-        extraData['mode'] = MODE_PLEXONLINE
+        extraData['mode'] = EnumMode.PLEXONLINE
 
         u="%s/system/plexonline" % server.get_url_location()
         addGUIItem(u,details,extraData)
@@ -345,7 +346,7 @@ def displaySections( filter=None, display_shared=False ):
         #create playlist link
         details['title']=prefix+"Playlists"
         extraData['type'] = "file"
-        extraData['mode'] = MODE_PLAYLISTS
+        extraData['mode'] = EnumMode.PLAYLISTS
 
         u="%s/playlists" % server.get_url_location()
         addGUIItem(u,details,extraData)
@@ -376,7 +377,7 @@ def displaySections( filter=None, display_shared=False ):
         extraData = {}
         extraData['type']="file"
 
-        extraData['mode']= MODE_DELETE_REFRESH
+        extraData['mode']= EnumMode.DELETE_REFRESH
 
         u="http://nothing"
         addGUIItem(u,details,extraData)
@@ -640,10 +641,10 @@ def TVShows( url, tree=None ):
         #Create URL based on whether we are going to flatten the season view
         if settings.get_setting('flatten') == "2":
             printDebug.debug("Flattening all shows")
-            extraData['mode']=MODE_TVEPISODES
+            extraData['mode']=EnumMode.TVEPISODES
             u='%s%s'  % ( server.get_url_location(), extraData['key'].replace("children","allLeaves"))
         else:
-            extraData['mode']=MODE_TVSEASONS
+            extraData['mode']=EnumMode.TVSEASONS
             u='%s%s'  % ( server.get_url_location(), extraData['key'])
 
         if not settings.get_setting('skipcontextmenus'):
@@ -717,7 +718,7 @@ def TVSeasons( url ):
                    'fanart_image'      : getFanart(season, server) ,
                    'key'               : season.get('key','') ,
                    'ratingKey'         : str(season.get('ratingKey',0)) ,
-                   'mode'              : MODE_TVEPISODES }
+                   'mode'              : EnumMode.TVEPISODES }
 
         if banner:
             extraData['banner']=server.get_url_location()+banner
@@ -884,7 +885,7 @@ def TVEpisodes( url, tree=None ):
         else:
             context=None
 
-        extraData['mode']=MODE_PLAYLIBRARY
+        extraData['mode']=EnumMode.PLAYLIBRARY
         separator = "?"
         if "?" in extraData['key']:
             separator = "&"
@@ -1012,7 +1013,7 @@ def getAudioSubtitlesMedia( server, tree, full=False ):
             except: pass
 
     #if we are deciding internally or forcing an external subs file, then collect the data
-    if media_type == "video" and settings.get_setting('streamControl') == SUB_AUDIO_PLEX_CONTROL:
+    if media_type == "video" and settings.get_setting('streamControl') == EnumSubAudioControl.PLEX_CONTROL:
 
         contents="all"
         tags=tree.getiterator('Stream')
@@ -1233,14 +1234,14 @@ def setAudioSubtitles( stream ):
         printDebug.info("No audio or subtitle streams to process.")
 
         #If we have decided to force off all subs, then turn them off now and return
-        if settings.get_setting('streamControl') == SUB_AUDIO_NEVER_SHOW :
+        if settings.get_setting('streamControl') == EnumSubAudioControl.NEVER_SHOW :
             xbmc.Player().showSubtitles(False)
             printDebug ("All subs disabled")
 
         return True
 
     #Set the AUDIO component
-    if settings.get_setting('streamControl') == SUB_AUDIO_PLEX_CONTROL:
+    if settings.get_setting('streamControl') == EnumSubAudioControl.PLEX_CONTROL:
         printDebug.debug("Attempting to set Audio Stream")
 
         audio = stream['audio']
@@ -1258,7 +1259,7 @@ def setAudioSubtitles( stream ):
                 printDebug.info("Error setting audio, will use embedded default stream")
 
     #Set the SUBTITLE component
-    if settings.get_setting('streamControl') == SUB_AUDIO_PLEX_CONTROL:
+    if settings.get_setting('streamControl') == EnumSubAudioControl.PLEX_CONTROL:
         printDebug.debug("Attempting to set preferred subtitle Stream")
         subtitle=stream['subtitle']
         if subtitle:
@@ -1665,7 +1666,7 @@ def processDirectory( url, tree=None ):
         extraData={'thumb'        : getThumb(tree, server) ,
                    'fanart_image' : getFanart(tree, server) }
 
-        extraData['mode'] = MODE_GETCONTENT
+        extraData['mode'] = EnumMode.GETCONTENT
         u='%s' % (get_link_url(url, directory, server))
 
         addGUIItem(u, details, extraData)
@@ -1704,7 +1705,7 @@ def artist( url, tree=None ):
                    'fanart_image' : getFanart(artist, server) ,
                    'ratingKey'    : artist.get('title','') ,
                    'key'          : artist.get('key','') ,
-                   'mode'         : MODE_ALBUMS ,
+                   'mode'         : EnumMode.ALBUMS ,
                    'plot'         : artist.get('summary','') }
 
         url='%s%s' % (server.get_url_location(), extraData['key'] )
@@ -1752,7 +1753,7 @@ def albums( url, tree=None ):
                    'thumb'        : getThumb(album, server) ,
                    'fanart_image' : getFanart(album, server) ,
                    'key'          : album.get('key',''),
-                   'mode'         : MODE_TRACKS ,
+                   'mode'         : EnumMode.TRACKS ,
                    'plot'         : album.get('summary','')}
 
         if extraData['fanart_image'] == "":
@@ -1863,15 +1864,15 @@ def PlexPlugins(url, tree=None):
         if plugin.tag == "Directory" or plugin.tag == "Podcast":
 
             if plugin.get('search') == '1':
-                extraData['mode']=MODE_CHANNELSEARCH
+                extraData['mode']=EnumMode.CHANNELSEARCH
                 extraData['parameters']={'prompt' : plugin.get('prompt',"Enter Search Term").encode('utf-8') }
             else:
-                extraData['mode']=MODE_PLEXPLUGINS
+                extraData['mode']=EnumMode.PLEXPLUGINS
 
             addGUIItem(p_url, details, extraData)
 
         elif plugin.tag == "Video":
-            extraData['mode']=MODE_VIDEOPLUGINPLAY
+            extraData['mode']=EnumMode.VIDEOPLUGINPLAY
 
             for child in plugin:
                 if child.tag == "Media":
@@ -1891,7 +1892,7 @@ def PlexPlugins(url, tree=None):
                 value=plugin.get('value')
 
             details['title']= "%s - [%s]" % (plugin.get('label','Unknown').encode('utf-8'), value)
-            extraData['mode']=MODE_CHANNELPREFS
+            extraData['mode']=EnumMode.CHANNELPREFS
             extraData['parameters']={'id' : plugin.get('id') }
             addGUIItem(url, details, extraData)
 
@@ -2007,7 +2008,7 @@ def processXML( url, tree=None ):
         p_url=get_link_url(url, plugin, server)
 
         if plugin.tag == "Directory" or plugin.tag == "Podcast":
-            extraData['mode']=MODE_PROCESSXML
+            extraData['mode']=EnumMode.PROCESSXML
             addGUIItem(p_url, details, extraData)
 
         elif plugin.tag == "Track":
@@ -2094,7 +2095,7 @@ def movieTag(url, server, tree, movie, randomNumber):
         details['genre']    = " / ".join(tempgenre)
 
     if movie.get('primaryExtraKey') is not None:
-        details['trailer'] = "plugin://plugin.video.plexbmc/?url=%s%s?t=%s&mode=%s" % (server.get_url_location(), movie.get('primaryExtraKey', ''), randomNumber, MODE_PLAYLIBRARY)
+        details['trailer'] = "plugin://plugin.video.plexbmc/?url=%s%s?t=%s&mode=%s" % (server.get_url_location(), movie.get('primaryExtraKey', ''), randomNumber, EnumMode.PLAYLIBRARY)
         printDebug.debug('Trailer plugin url added: %s' % details['trailer'])
 
     #Add extra media flag data
@@ -2107,7 +2108,7 @@ def movieTag(url, server, tree, movie, randomNumber):
     else:
         context=None
     # http:// <server> <path> &mode=<mode> &t=<rnd>
-    extraData['mode']=MODE_PLAYLIBRARY
+    extraData['mode']=EnumMode.PLAYLIBRARY
     separator = "?"
     if "?" in extraData['key']:
         separator = "&"
@@ -2160,7 +2161,7 @@ def trackTag( server, tree, track, sectionart="", sectionthumb="", listing=True 
                'key'           : track.get('key','') }
 
     #If we are streaming, then get the virtual location
-    extraData['mode']=MODE_PLAYLIBRARY
+    extraData['mode']=EnumMode.PLAYLIBRARY
     u="%s%s" % (server.get_url_location(), extraData['key'])
 
     if listing:
@@ -2179,11 +2180,11 @@ def playlistTag(url, server, tree, track, sectionart="", sectionthumb="", listin
                'thumb'      : getThumb({'thumb' : track.get('composite', '')},server)}
 
     if extraData['type'] == "video":
-        extraData['mode'] = MODE_MOVIES
+        extraData['mode'] = EnumMode.MOVIES
     elif extraData['type'] == "audio":
-        extraData['mode'] = MODE_TRACKS
+        extraData['mode'] = EnumMode.TRACKS
     else:
-        extraData['mode']=MODE_GETCONTENT
+        extraData['mode']=EnumMode.GETCONTENT
 
     u=get_link_url(url, track, server)
 
@@ -2221,7 +2222,7 @@ def photo( url,tree=None ):
         u=get_link_url(url, picture, server)
 
         if picture.tag == "Directory":
-            extraData['mode']=MODE_PHOTOS
+            extraData['mode']=EnumMode.PHOTOS
             addGUIItem(u,details,extraData)
 
         elif picture.tag == "Photo":
@@ -2278,7 +2279,7 @@ def music( url, tree=None ):
             details['title']=grapes.get('track',grapes.get('title','Unknown')).encode('utf-8')
             details['duration']=int(int(grapes.get('totalTime',0))/1000)
 
-            extraData['mode']=MODE_BASICPLAY
+            extraData['mode']=EnumMode.BASICPLAY
             addGUIItem(u,details,extraData,folder=False)
 
         else:
@@ -2300,7 +2301,7 @@ def music( url, tree=None ):
                 printDebug.debug("Generic Tag: %s" % grapes.tag)
                 details['title']=grapes.get('title','Unknown').encode('utf-8')
 
-            extraData['mode']=MODE_MUSIC
+            extraData['mode']=EnumMode.MUSIC
             addGUIItem(u,details,extraData)
 
     printDebug.debug("Skin override is: %s" % settings.get_setting('skinoverride'))
@@ -2373,13 +2374,13 @@ def plexOnline( url ):
                    'key'       : plugin.get('key','') ,
                    'thumb'     : getThumb(plugin,server)}
 
-        extraData['mode']=MODE_CHANNELINSTALL
+        extraData['mode']=EnumMode.CHANNELINSTALL
 
         if extraData['installed'] == 1:
             details['title']=details['title']+" (installed)"
 
         elif extraData['installed'] == 2:
-            extraData['mode']=MODE_PLEXONLINE
+            extraData['mode']=EnumMode.PLEXONLINE
 
         u=get_link_url(url, plugin, server)
 
@@ -2465,13 +2466,13 @@ def channelView( url ):
         p_url=get_link_url(url, {'key': channels.get('key'), 'identifier' : channels.get('key')} , server)
 
         if suffix == "photos":
-            extraData['mode']=MODE_PHOTOS
+            extraData['mode']=EnumMode.PHOTOS
         elif suffix == "video":
-            extraData['mode']=MODE_PLEXPLUGINS
+            extraData['mode']=EnumMode.PLEXPLUGINS
         elif suffix == "music":
-            extraData['mode']=MODE_MUSIC
+            extraData['mode']=EnumMode.MUSIC
         else:
-            extraData['mode']=MODE_GETCONTENT
+            extraData['mode']=EnumMode.GETCONTENT
 
         addGUIItem(p_url,details,extraData)
 
@@ -2625,7 +2626,7 @@ def shelf( server_list=None ):
                 printDebug.debug("SKIPPING: Library Filter match: %s = %s " % (library_filter, media.get('librarySectionID')))
                 continue
 
-            title_url="plugin://plugin.video.plexbmc?url=%s&mode=%s&t=%s" % ( get_link_url(server.get_url_location(),media,server), MODE_PLAYSHELF, randomNumber)
+            title_url="plugin://plugin.video.plexbmc?url=%s&mode=%s&t=%s" % ( get_link_url(server.get_url_location(),media,server), EnumMode.PLAYSHELF, randomNumber)
             title_thumb=getThumb(media,server)
 
             WINDOW.setProperty("Plexbmc.LatestMovie.%s.Path" % movieCount, title_url)
@@ -2643,7 +2644,7 @@ def shelf( server_list=None ):
                 continue
 
             title_name=media.get('parentTitle','Unknown').encode('UTF-8')
-            title_url="ActivateWindow(VideoLibrary, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % ( get_link_url(server.get_url_location(),media,server), MODE_TVEPISODES)
+            title_url="ActivateWindow(VideoLibrary, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % ( get_link_url(server.get_url_location(),media,server), EnumMode.TVEPISODES)
             title_thumb=getThumb(media,server)
 
             WINDOW.setProperty("Plexbmc.LatestEpisode.%s.Path" % seasonCount, title_url )
@@ -2662,7 +2663,7 @@ def shelf( server_list=None ):
             printDebug.debug("Found a recent album entry")
 
             title_name=media.get('parentTitle','Unknown').encode('UTF-8')
-            title_url="ActivateWindow(MusicFiles, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % ( get_link_url(server.get_url_location(),media,server), MODE_TRACKS)
+            title_url="ActivateWindow(MusicFiles, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % ( get_link_url(server.get_url_location(),media,server), EnumMode.TRACKS)
             title_thumb=getThumb(media,server)
 
             WINDOW.setProperty("Plexbmc.LatestAlbum.%s.Path" % musicCount, title_url )
@@ -2680,7 +2681,7 @@ def shelf( server_list=None ):
                 WINDOW.clearProperty("Plexbmc.LatestEpisode.1.Path" )
                 continue
 
-            title_url="PlayMedia(plugin://plugin.video.plexbmc?url=%s&mode=%s%s)" % ( get_link_url(server.get_url_location(),media,server), MODE_PLAYSHELF)
+            title_url="PlayMedia(plugin://plugin.video.plexbmc?url=%s&mode=%s%s)" % ( get_link_url(server.get_url_location(),media,server), EnumMode.PLAYSHELF)
             title_thumb=server.get_kodi_header_formatted_url(media.get('grandparentThumb',''))
 
             WINDOW.setProperty("Plexbmc.LatestEpisode.%s.Path" % seasonCount, title_url )
@@ -2739,19 +2740,19 @@ def shelfChannel(server_list = None):
             suffix=media.get('key').split('/')[1]
 
             if suffix == "photos":
-                mode=MODE_PHOTOS
+                mode=EnumMode.PHOTOS
                 channel_window = "Pictures"
 
             elif suffix == "video":
-                mode=MODE_PLEXPLUGINS
+                mode=EnumMode.PLEXPLUGINS
                 channel_window="VideoLibrary"
 
             elif suffix == "music":
-                mode=MODE_MUSIC
+                mode=EnumMode.MUSIC
                 channel_window="MusicFiles"
 
             else:
-                mode=MODE_GETCONTENT
+                mode=EnumMode.GETCONTENT
                 channel_window="VideoLibrary"
 
             c_url="ActivateWindow(%s, plugin://plugin.video.plexbmc?url=%s&mode=%s)" % ( channel_window, get_link_url(server_details.get_url_location(),media,server_details), mode)
@@ -3006,28 +3007,28 @@ def displayServers( url ):
         extraData={}
 
         if type == "video":
-            extraData['mode']=MODE_PLEXPLUGINS
+            extraData['mode']=EnumMode.PLEXPLUGINS
             s_url='%s%s' % ( mediaserver.get_url_location(), '/video' )
             if Servers_list == 1:
                 PlexPlugins(s_url)
                 return
 
         elif type == "online":
-            extraData['mode']=MODE_PLEXONLINE
+            extraData['mode']=EnumMode.PLEXONLINE
             s_url='%s%s' % ( mediaserver.get_url_location() , '/system/plexonline')
             if Servers_list == 1:
                 plexOnline(s_url)
                 return
 
         elif type == "music":
-            extraData['mode']=MODE_MUSIC
+            extraData['mode']=EnumMode.MUSIC
             s_url='%s%s' % ( mediaserver.get_url_location(), '/music' )
             if Servers_list == 1:
                 music(s_url)
                 return
 
         elif type == "photo":
-            extraData['mode']=MODE_PHOTOS
+            extraData['mode']=EnumMode.PHOTOS
             s_url='%s%s' % ( mediaserver.get_url_location(), '/photos' )
             if Servers_list == 1:
                 photo(s_url)
@@ -3054,11 +3055,11 @@ if settings.get_debug() >= printDebug.DEBUG_INFO:
     print "PleXBMC -> Settings streaming: %s" % settings.get_stream()
     print "PleXBMC -> Setting filter menus: %s" % settings.get_setting('secondary')
     print "PleXBMC -> Flatten is: %s" % settings.get_setting('flatten')
-    if settings.get_setting('streamControl') == SUB_AUDIO_XBMC_CONTROL:
+    if settings.get_setting('streamControl') == EnumSubAudioControl.XBMC_CONTROL:
         print "PleXBMC -> Setting stream Control to : XBMC CONTROL"
-    elif settings.get_setting('streamControl') == SUB_AUDIO_PLEX_CONTROL:
+    elif settings.get_setting('streamControl') == EnumSubAudioControl.PLEX_CONTROL:
         print "PleXBMC -> Setting stream Control to : PLEX CONTROL"
-    elif settings.get_setting('streamControl') == SUB_AUDIO_NEVER_SHOW:
+    elif settings.get_setting('streamControl') == EnumSubAudioControl.NEVER_SHOW:
         print "PleXBMC -> Setting stream Control to : NEVER SHOW"
 
     print "PleXBMC -> Force DVD playback: %s" % settings.get_setting('forcedvd')
@@ -3195,96 +3196,96 @@ def start_plexbmc():
         if (mode is None) or (param_url is None) or (len(param_url) < 1):
             displaySections()
 
-        elif mode == MODE_GETCONTENT:
+        elif mode == EnumMode.GETCONTENT:
             getContent(param_url)
 
-        elif mode == MODE_TVSHOWS:
+        elif mode == EnumMode.TVSHOWS:
             TVShows(param_url)
 
-        elif mode == MODE_MOVIES:
+        elif mode == EnumMode.MOVIES:
             Movies(param_url)
 
-        elif mode == MODE_ARTISTS:
+        elif mode == EnumMode.ARTISTS:
             artist(param_url)
 
-        elif mode == MODE_TVSEASONS:
+        elif mode == EnumMode.TVSEASONS:
             TVSeasons(param_url)
 
-        elif mode == MODE_PLAYLIBRARY:
+        elif mode == EnumMode.PLAYLIBRARY:
             playLibraryMedia(param_url, force=force, override=play_transcode)
 
-        elif mode == MODE_PLAYSHELF:
+        elif mode == EnumMode.PLAYSHELF:
             playLibraryMedia(param_url, full_data=True, shelf=True)
 
-        elif mode == MODE_TVEPISODES:
+        elif mode == EnumMode.TVEPISODES:
             TVEpisodes(param_url)
 
-        elif mode == MODE_PLEXPLUGINS:
+        elif mode == EnumMode.PLEXPLUGINS:
             PlexPlugins(param_url)
 
-        elif mode == MODE_PROCESSXML:
+        elif mode == EnumMode.PROCESSXML:
             processXML(param_url)
 
-        elif mode == MODE_BASICPLAY:
+        elif mode == EnumMode.BASICPLAY:
             PLAY(param_url)
 
-        elif mode == MODE_ALBUMS:
+        elif mode == EnumMode.ALBUMS:
             albums(param_url)
 
-        elif mode == MODE_TRACKS:
+        elif mode == EnumMode.TRACKS:
             tracks(param_url)
 
-        elif mode == MODE_PHOTOS:
+        elif mode == EnumMode.PHOTOS:
             photo(param_url)
 
-        elif mode == MODE_MUSIC:
+        elif mode == EnumMode.MUSIC:
             music(param_url)
 
-        elif mode == MODE_VIDEOPLUGINPLAY:
+        elif mode == EnumMode.VIDEOPLUGINPLAY:
             videoPluginPlay(param_url, param_identifier, param_indirect)
 
-        elif mode == MODE_PLEXONLINE:
+        elif mode == EnumMode.PLEXONLINE:
             plexOnline(param_url)
 
-        elif mode == MODE_CHANNELINSTALL:
+        elif mode == EnumMode.CHANNELINSTALL:
             install(param_url, param_name)
 
-        elif mode == MODE_CHANNELVIEW:
+        elif mode == EnumMode.CHANNELVIEW:
             channelView(param_url)
 
-        elif mode == MODE_PLAYLIBRARY_TRANSCODE:
+        elif mode == EnumMode.PLAYLIBRARY_TRANSCODE:
             playLibraryMedia(param_url, override=True)
 
-        elif mode == MODE_MYPLEXQUEUE:
+        elif mode == EnumMode.MYPLEXQUEUE:
             myPlexQueue()
 
-        elif mode == MODE_CHANNELSEARCH:
+        elif mode == EnumMode.CHANNELSEARCH:
             channelSearch(param_url, params.get('prompt'))
 
-        elif mode == MODE_CHANNELPREFS:
+        elif mode == EnumMode.CHANNELPREFS:
             channelSettings(param_url, params.get('id'))
 
-        elif mode == MODE_SHARED_MOVIES:
+        elif mode == EnumMode.SHARED_MOVIES:
             displaySections(filter="movies", display_shared=True)
 
-        elif mode == MODE_SHARED_SHOWS:
+        elif mode == EnumMode.SHARED_SHOWS:
             displaySections(filter="tvshows", display_shared=True)
 
-        elif mode == MODE_SHARED_PHOTOS:
+        elif mode == EnumMode.SHARED_PHOTOS:
             displaySections(filter="photos", display_shared=True)
 
-        elif mode == MODE_SHARED_MUSIC:
+        elif mode == EnumMode.SHARED_MUSIC:
             displaySections(filter="music", display_shared=True)
 
-        elif mode == MODE_SHARED_ALL:
+        elif mode == EnumMode.SHARED_ALL:
             displaySections(display_shared=True)
 
-        elif mode == MODE_DELETE_REFRESH:
+        elif mode == EnumMode.DELETE_REFRESH:
             plex_network.delete_cache()
             xbmc.executebuiltin("Container.Refresh")
 
-        elif mode == MODE_PLAYLISTS:
+        elif mode == EnumMode.PLAYLISTS:
             processXML(param_url)
 
-        elif mode == MODE_DISPLAYSERVERS:
+        elif mode == EnumMode.DISPLAYSERVERS:
             displayServers(param_url)

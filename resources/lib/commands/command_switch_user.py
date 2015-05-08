@@ -4,7 +4,7 @@ import xbmcgui
 from .base_command import BaseCommand
 from ..plexserver import plex_network
 from ..common import PrintDebug
-from ..common import clear_shelf, clear_skin_sections, clear_on_deck_shelf
+from ..utils import clear_shelf, clear_skin_sections, clear_on_deck_shelf
 
 printDebug = PrintDebug("PleXBMC", "CommandSwitchUser")
 
@@ -14,7 +14,7 @@ class CommandSwitchUser(BaseCommand):
         super(CommandSwitchUser, self).__init__(args)
 
     def execute(self):
-        if self.switch_user():
+        if _switch_user():
             clear_skin_sections()
             clear_on_deck_shelf()
             clear_shelf()
@@ -29,38 +29,38 @@ class CommandSwitchUser(BaseCommand):
         else:
             printDebug.info("Switch User Failed")
 
-    @staticmethod
-    def switch_user():
-        # Get list of users
-        user_list = plex_network.get_plex_home_users()
-        # zero means we are not plexHome'd up
-        if user_list is None or len(user_list) == 1:
-            printDebug("No users listed or only one user, plexHome not enabled")
-            return False
 
-        printDebug("found %s users: %s" % (len(user_list), user_list.keys()))
+def _switch_user():
+    # Get list of users
+    user_list = plex_network.get_plex_home_users()
+    # zero means we are not plexHome'd up
+    if user_list is None or len(user_list) == 1:
+        printDebug("No users listed or only one user, plexHome not enabled")
+        return False
 
-        # Get rid of currently logged in user.
-        user_list.pop(plex_network.get_myplex_user(), None)
+    printDebug("found %s users: %s" % (len(user_list), user_list.keys()))
 
-        select_screen = xbmcgui.Dialog()
-        result = select_screen.select('Switch User', user_list.keys())
-        if result == -1:
-            printDebug("Dialog cancelled")
-            return False
+    # Get rid of currently logged in user.
+    user_list.pop(plex_network.get_myplex_user(), None)
 
-        printDebug("user [%s] selected" % user_list.keys()[result])
-        user = user_list[user_list.keys()[result]]
+    select_screen = xbmcgui.Dialog()
+    result = select_screen.select('Switch User', user_list.keys())
+    if result == -1:
+        printDebug("Dialog cancelled")
+        return False
 
-        pin = None
-        if user['protected'] == '1':
-            printDebug("Protected user [%s], requesting password" % user['title'])
-            pin = select_screen.input("Enter PIN", type=xbmcgui.INPUT_NUMERIC, option=xbmcgui.ALPHANUM_HIDE_INPUT)
+    printDebug("user [%s] selected" % user_list.keys()[result])
+    user = user_list[user_list.keys()[result]]
 
-        success, msg = plex_network.switch_plex_home_user(user['id'], pin)
+    pin = None
+    if user['protected'] == '1':
+        printDebug("Protected user [%s], requesting password" % user['title'])
+        pin = select_screen.input("Enter PIN", type=xbmcgui.INPUT_NUMERIC, option=xbmcgui.ALPHANUM_HIDE_INPUT)
 
-        if not success:
-            xbmcgui.Dialog().ok("Switch Failed", msg)
-            return False
+    success, msg = plex_network.switch_plex_home_user(user['id'], pin)
 
-        return True
+    if not success:
+        xbmcgui.Dialog().ok("Switch Failed", msg)
+        return False
+
+    return True

@@ -2,8 +2,8 @@ import xbmcgui
 
 from .base_command import BaseCommand
 from ..plexserver import plex_network
-from ..common import PrintDebug, AddonSettings, clear_skin_sections
-from ..common.constants import *
+from ..common import PrintDebug, AddonSettings, EnumMode, GENERIC_THUMBNAIL
+from ..utils import clear_skin_sections
 
 settings = AddonSettings()
 printDebug = PrintDebug("PleXBMC", "CommandSkin")
@@ -66,7 +66,7 @@ def _skin(skin_type=None, server_list=None):
                     shared_flag['show'] = True
                     continue
                 window_name = "VideoLibrary"
-                mode = MODE_TVSHOWS
+                mode = EnumMode.TVSHOWS
                 window.setProperty("plexbmc.%d.search" % section_count,
                                    "ActivateWindow(%s,plugin://plugin.video.plexbmc/?url=%s%s%s&mode=%s,return)" % (
                                        window_name, server.get_url_location(), section.get_path(), "/search?type=4",
@@ -76,7 +76,7 @@ def _skin(skin_type=None, server_list=None):
                     shared_flag['movie'] = True
                     continue
                 window_name = "VideoLibrary"
-                mode = MODE_MOVIES
+                mode = EnumMode.MOVIES
                 window.setProperty("plexbmc.%d.search" % section_count,
                                    "ActivateWindow(%s,plugin://plugin.video.plexbmc/?url=%s%s%s&mode=%s,return)" % (
                                        window_name, server.get_url_location(), section.get_path(), "/search?type=1",
@@ -86,7 +86,7 @@ def _skin(skin_type=None, server_list=None):
                     shared_flag['artist'] = True
                     continue
                 window_name = "MusicFiles"
-                mode = MODE_ARTISTS
+                mode = EnumMode.ARTISTS
                 window.setProperty("plexbmc.%d.album" % section_count,
                                    "ActivateWindow(%s,plugin://plugin.video.plexbmc/?url=%s%s%s&mode=%s,return)" % (
                                        window_name, server.get_url_location(), section.get_path(), "/albums", mode))
@@ -102,10 +102,10 @@ def _skin(skin_type=None, server_list=None):
                 window.setProperty("plexbmc.%d.year" % section_count,
                                    "ActivateWindow(%s,plugin://plugin.video.plexbmc/?url=%s%s%s&mode=%s,return)" % (
                                        window_name, server.get_url_location(), section.get_path(), "/year", mode))
-                mode = MODE_PHOTOS
+                mode = EnumMode.PHOTOS
 
             if settings.get_setting('secondary'):
-                mode = MODE_GETCONTENT
+                mode = EnumMode.GETCONTENT
             else:
                 path += '/all'
 
@@ -155,7 +155,7 @@ def _skin(skin_type=None, server_list=None):
         window.setProperty("plexbmc.%d.subtitle" % section_count, "Shared")
         window.setProperty("plexbmc.%d.path" % section_count,
                            "ActivateWindow(VideoLibrary,plugin://plugin.video.plexbmc/?url=/&mode=%s,return)" %
-                           MODE_SHARED_ALL)
+                           EnumMode.SHARED_ALL)
         window.setProperty("plexbmc.%d.type" % section_count, "movie")
         window.setProperty("plexbmc.%d.shared" % section_count, "true")
         section_count += 1
@@ -167,7 +167,7 @@ def _skin(skin_type=None, server_list=None):
             window.setProperty("plexbmc.%d.subtitle" % section_count, "Shared")
             window.setProperty("plexbmc.%d.path" % section_count,
                                "ActivateWindow(VideoLibrary,plugin://plugin.video.plexbmc/?url=/&mode=%s,return)" %
-                               MODE_SHARED_MOVIES)
+                               EnumMode.SHARED_MOVIES)
             window.setProperty("plexbmc.%d.type" % section_count, "movie")
             window.setProperty("plexbmc.%d.shared" % section_count, "true")
             section_count += 1
@@ -177,7 +177,7 @@ def _skin(skin_type=None, server_list=None):
             window.setProperty("plexbmc.%d.subtitle" % section_count, "Shared")
             window.setProperty("plexbmc.%d.path" % section_count,
                                "ActivateWindow(VideoLibrary,plugin://plugin.video.plexbmc/?url=/&mode=%s,return)" %
-                               MODE_SHARED_SHOWS)
+                               EnumMode.SHARED_SHOWS)
             window.setProperty("plexbmc.%d.type" % section_count, "show")
             window.setProperty("plexbmc.%d.shared" % section_count, "true")
             section_count += 1
@@ -187,7 +187,7 @@ def _skin(skin_type=None, server_list=None):
             window.setProperty("plexbmc.%d.subtitle" % section_count, "Shared")
             window.setProperty("plexbmc.%d.path" % section_count,
                                "ActivateWindow(MusicFiles,plugin://plugin.video.plexbmc/?url=/&mode=%s,return)" %
-                               MODE_SHARED_MUSIC)
+                               EnumMode.SHARED_MUSIC)
             window.setProperty("plexbmc.%d.type" % section_count, "artist")
             window.setProperty("plexbmc.%d.shared" % section_count, "true")
             section_count += 1
@@ -197,7 +197,7 @@ def _skin(skin_type=None, server_list=None):
             window.setProperty("plexbmc.%d.subtitle" % section_count, "Shared")
             window.setProperty("plexbmc.%d.path" % section_count,
                                "ActivateWindow(Pictures,plugin://plugin.video.plexbmc/?url=/&mode=%s,return)" %
-                               MODE_SHARED_PHOTOS)
+                               EnumMode.SHARED_PHOTOS)
             window.setProperty("plexbmc.%d.type" % section_count, "photo")
             window.setProperty("plexbmc.%d.shared" % section_count, "true")
             section_count += 1
