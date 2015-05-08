@@ -7,7 +7,7 @@ GLOBAL_SETUP['platform'] = get_platform()
 GENERIC_THUMBNAIL = "%s/resource/thumb.png" % GLOBAL_SETUP['__cwd__']
 
 
-class EnumMode:
+class Mode:
     # Get the setting from the appropriate file.
     GETCONTENT = 0
     TVSHOWS = 1
@@ -45,7 +45,7 @@ class EnumMode:
         pass
 
 
-class EnumSubAudioControl:
+class SubAudioControl:
     XBMC_CONTROL = "0"
     PLEX_CONTROL = "1"
     NEVER_SHOW = "2"

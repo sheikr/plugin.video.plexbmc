@@ -3,7 +3,7 @@ import random
 import xbmc
 from .base_command import BaseCommand
 from ..plexserver import plex_network
-from ..common import AddonSettings, PrintDebug, EnumMode
+from ..common import AddonSettings, PrintDebug, Mode
 from ..utils import clear_shelf, get_thumb, get_link_url
 import xbmcgui
 
@@ -107,7 +107,7 @@ def _shelf(server_list=None):
                 continue
 
             title_url = "plugin://plugin.video.plexbmc?url=%s&mode=%s&t=%s" % (
-            get_link_url(server.get_url_location(), media, server), EnumMode.PLAYSHELF, randomNumber)
+            get_link_url(server.get_url_location(), media, server), Mode.PLAYSHELF, randomNumber)
             title_thumb = get_thumb(media, server)
 
             WINDOW.setProperty("Plexbmc.LatestMovie.%s.Path" % movieCount, title_url)
@@ -127,7 +127,7 @@ def _shelf(server_list=None):
 
             title_name = media.get('parentTitle', 'Unknown').encode('UTF-8')
             title_url = "ActivateWindow(VideoLibrary, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % (
-            get_link_url(server.get_url_location(), media, server), EnumMode.TVEPISODES)
+            get_link_url(server.get_url_location(), media, server), Mode.TVEPISODES)
             title_thumb = get_thumb(media, server)
 
             WINDOW.setProperty("Plexbmc.LatestEpisode.%s.Path" % seasonCount, title_url)
@@ -148,7 +148,7 @@ def _shelf(server_list=None):
 
             title_name = media.get('parentTitle', 'Unknown').encode('UTF-8')
             title_url = "ActivateWindow(MusicFiles, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % (
-            get_link_url(server.get_url_location(), media, server), EnumMode.TRACKS)
+            get_link_url(server.get_url_location(), media, server), Mode.TRACKS)
             title_thumb = get_thumb(media, server)
 
             WINDOW.setProperty("Plexbmc.LatestAlbum.%s.Path" % musicCount, title_url)
@@ -169,7 +169,7 @@ def _shelf(server_list=None):
 
             # todo: to few arguments in "format string"
             title_url = "PlayMedia(plugin://plugin.video.plexbmc?url=%s&mode=%s%s)" % (
-            get_link_url(server.get_url_location(), media, server), EnumMode.PLAYSHELF)
+            get_link_url(server.get_url_location(), media, server), Mode.PLAYSHELF)
             title_thumb = server.get_kodi_header_formatted_url(media.get('grandparentThumb', ''))
 
             WINDOW.setProperty("Plexbmc.LatestEpisode.%s.Path" % seasonCount, title_url)

@@ -7,7 +7,7 @@ from .base_command import BaseCommand
 from ..utils import clear_skin_sections, clear_shelf, clear_on_deck_shelf, get_link_url
 from ..plexserver import plex_network, get_master_server
 from ..common import PrintDebug, AddonSettings
-from ..common import EnumMode, GENERIC_THUMBNAIL
+from ..common import Mode, GENERIC_THUMBNAIL
 
 settings = AddonSettings()
 printDebug = PrintDebug("PleXBMC", "CommandAmberSkin")
@@ -69,7 +69,7 @@ def amberskin():
                     shared_count += 1
                     continue
                 window_name = "VideoLibrary"
-                mode = EnumMode.TVSHOWS
+                mode = Mode.TVSHOWS
                 window.setProperty("plexbmc.%d.search" % section_count, "ActivateWindow(%s,%s%s%s&mode=%s,return)" % (
                     window_name, base_url, path, "/search?type=4", mode))
 
@@ -79,7 +79,7 @@ def amberskin():
                     shared_count += 1
                     continue
                 window_name = "VideoLibrary"
-                mode = EnumMode.MOVIES
+                mode = Mode.MOVIES
                 window.setProperty("plexbmc.%d.search" % section_count, "ActivateWindow(%s,%s%s%s&mode=%s,return)" % (
                     window_name, base_url, path, "/search?type=1", mode))
 
@@ -89,7 +89,7 @@ def amberskin():
                     shared_count += 1
                     continue
                 window_name = "MusicFiles"
-                mode = EnumMode.ARTISTS
+                mode = Mode.ARTISTS
                 window.setProperty("plexbmc.%d.album" % section_count, "ActivateWindow(%s,%s%s%s&mode=%s,return)" % (
                     window_name, base_url, path, "/albums", mode))
                 window.setProperty("plexbmc.%d.search" % section_count, "ActivateWindow(%s,%s%s%s&mode=%s,return)" % (
@@ -110,10 +110,10 @@ def amberskin():
                     shared_count += 1
                     continue
                 window_name = "Videos"
-                mode = EnumMode.PHOTOS
+                mode = Mode.PHOTOS
 
             if settings.get_setting('secondary'):
-                mode = EnumMode.GETCONTENT
+                mode = Mode.GETCONTENT
                 suffix = ''
             else:
                 suffix = '/all'
@@ -161,7 +161,7 @@ def amberskin():
         window.setProperty("plexbmc.%d.subtitle" % section_count, "Shared")
         window.setProperty("plexbmc.%d.path" % section_count,
                            "ActivateWindow(VideoLibrary,plugin://plugin.video.plexbmc/?url=/&mode=%s,return)" %
-                           EnumMode.SHARED_ALL)
+                           Mode.SHARED_ALL)
         window.setProperty("plexbmc.%d.type" % section_count, "shared")
         window.setProperty("plexbmc.%d.shared" % section_count, "true")
         section_count += 1
@@ -176,22 +176,22 @@ def amberskin():
         if shared_flag.get('movie'):
             window.setProperty("plexbmc.%d.path" % section_count,
                                "ActivateWindow(VideoLibrary,plugin://plugin.video.plexbmc/?url=/&mode=%s,return)" %
-                               EnumMode.SHARED_MOVIES)
+                               Mode.SHARED_MOVIES)
 
         if shared_flag.get('show'):
             window.setProperty("plexbmc.%d.path" % section_count,
                                "ActivateWindow(VideoLibrary,plugin://plugin.video.plexbmc/?url=/&mode=%s,return)" %
-                               EnumMode.SHARED_SHOWS)
+                               Mode.SHARED_SHOWS)
 
         if shared_flag.get('artist'):
             window.setProperty("plexbmc.%d.path" % section_count,
                                "ActivateWindow(MusicFiles,plugin://plugin.video.plexbmc/?url=/&mode=%s,return)" %
-                               EnumMode.SHARED_MUSIC)
+                               Mode.SHARED_MUSIC)
 
         if shared_flag.get('photo'):
             window.setProperty("plexbmc.%d.path" % section_count,
                                "ActivateWindow(Pictures,plugin://plugin.video.plexbmc/?url=/&mode=%s,return)" %
-                               EnumMode.SHARED_PHOTOS)
+                               Mode.SHARED_PHOTOS)
 
         section_count += 1
 
@@ -210,18 +210,18 @@ def amberskin():
             window.setProperty("plexbmc.channel", "1")
             window.setProperty("plexbmc.%d.server.channel" % server_count,
                                "ActivateWindow(VideoLibrary,plugin://plugin.video.plexbmc/?url=%s%s&mode=%s, return" %
-                               (server.get_url_location(), "/channels/all", EnumMode.CHANNELVIEW))
+                               (server.get_url_location(), "/channels/all", Mode.CHANNELVIEW))
         else:
             window.clearProperty("plexbmc.channel")
             window.setProperty("plexbmc.%d.server.video" % server_count,
-                               "%s%s&mode=%s" % (server.get_url_location(), "/video", EnumMode.PLEXPLUGINS))
+                               "%s%s&mode=%s" % (server.get_url_location(), "/video", Mode.PLEXPLUGINS))
             window.setProperty("plexbmc.%d.server.music" % server_count,
-                               "%s%s&mode=%s" % (server.get_url_location(), "/music", EnumMode.MUSIC))
+                               "%s%s&mode=%s" % (server.get_url_location(), "/music", Mode.MUSIC))
             window.setProperty("plexbmc.%d.server.photo" % server_count,
-                               "%s%s&mode=%s" % (server.get_url_location(), "/photos", EnumMode.PHOTOS))
+                               "%s%s&mode=%s" % (server.get_url_location(), "/photos", Mode.PHOTOS))
 
         window.setProperty("plexbmc.%d.server.online" % server_count,
-                           "%s%s&mode=%s" % (server.get_url_location(), "/system/plexonline", EnumMode.PLEXONLINE))
+                           "%s%s&mode=%s" % (server.get_url_location(), "/system/plexonline", Mode.PLEXONLINE))
 
         window.setProperty("plexbmc.%d.server" % server_count, server.get_name())
 
@@ -376,7 +376,7 @@ def _full_shelf(server_list=None):
             printDebug.debug("Found a recent movie entry: [%s]" % title_name)
 
             title_url = "plugin://plugin.video.plexbmc?url=%s&mode=%s&t=%s" % (
-                get_link_url(source_server.get_url_location(), media, source_server), EnumMode.PLAYSHELF, randomNumber)
+                get_link_url(source_server.get_url_location(), media, source_server), Mode.PLAYSHELF, randomNumber)
             title_thumb = _get_shelf_thumb(media, source_server)
 
             if media.get('duration') > 0:
@@ -422,7 +422,7 @@ def _full_shelf(server_list=None):
                 continue
 
             title_url = "ActivateWindow(VideoLibrary, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % (
-                get_link_url(source_server.get_url_location(), media, source_server), EnumMode.TVEPISODES)
+                get_link_url(source_server.get_url_location(), media, source_server), Mode.TVEPISODES)
             title_thumb = _get_shelf_thumb(media, source_server)
 
             WINDOW.setProperty("Plexbmc.LatestEpisode.%s.Path" % recentSeasonCount, title_url)
@@ -444,7 +444,7 @@ def _full_shelf(server_list=None):
 
             title_name = media.get('parentTitle', 'Unknown').encode('UTF-8')
             title_url = "ActivateWindow(MusicFiles, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % (
-                get_link_url(source_server.get_url_location(), media, source_server), EnumMode.TRACKS)
+                get_link_url(source_server.get_url_location(), media, source_server), Mode.TRACKS)
             title_thumb = _get_shelf_thumb(media, source_server)
 
             printDebug.debug("Found a recent album entry: [%s]" % title_name)
@@ -461,7 +461,7 @@ def _full_shelf(server_list=None):
 
             title_name = media.get('title', 'Unknown').encode('UTF-8')
             title_url = "ActivateWindow(Pictures, plugin://plugin.video.plexbmc/?url=%s%s&mode=%s,return" % (
-                source_server.get_url_location(), "/recentlyAdded", EnumMode.PHOTOS)
+                source_server.get_url_location(), "/recentlyAdded", Mode.PHOTOS)
             title_thumb = _get_shelf_thumb(media, source_server)
 
             printDebug.debug("Found a recent photo entry: [%s]" % title_name)
@@ -483,7 +483,7 @@ def _full_shelf(server_list=None):
 
             title_url = "ActivateWindow(Videos, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % (
                 get_link_url(source_server.get_url_location(), media, source_server, season_shelf=True),
-                EnumMode.TVEPISODES)
+                Mode.TVEPISODES)
             title_thumb = _get_shelf_thumb(media, source_server, season_thumb=True, prefer_season=prefer_season)
 
             WINDOW.setProperty("Plexbmc.LatestEpisode.%s.Path" % recentSeasonCount, title_url)
@@ -521,7 +521,7 @@ def _full_shelf(server_list=None):
                 continue
 
             title_url = "plugin://plugin.video.plexbmc?url=%s&mode=%s&t=%s" % (
-                get_link_url(source_server.get_url_location(), media, source_server), EnumMode.PLAYSHELF, randomNumber)
+                get_link_url(source_server.get_url_location(), media, source_server), Mode.PLAYSHELF, randomNumber)
             title_thumb = _get_shelf_thumb(media, source_server)
 
             if media.get('duration') > 0:
@@ -555,7 +555,7 @@ def _full_shelf(server_list=None):
                 continue
 
             title_url = "ActivateWindow(VideoLibrary, plugin://plugin.video.plexbmc?url=%s&mode=%s, return)" % (
-                get_link_url(source_server.get_url_location(), media, source_server), EnumMode.TVEPISODES)
+                get_link_url(source_server.get_url_location(), media, source_server), Mode.TVEPISODES)
             title_thumb = _get_shelf_thumb(media, source_server)
 
             WINDOW.setProperty("Plexbmc.OnDeckEpisode.%s.Path" % ondeckSeasonCount, title_url)
@@ -577,7 +577,7 @@ def _full_shelf(server_list=None):
                 continue
 
             title_url = "PlayMedia(plugin://plugin.video.plexbmc?url=%s&mode=%s&t=%s)" % (
-                get_link_url(source_server.get_url_location(), media, source_server), EnumMode.PLAYSHELF, randomNumber)
+                get_link_url(source_server.get_url_location(), media, source_server), Mode.PLAYSHELF, randomNumber)
             title_thumb = _get_shelf_thumb(media, source_server, season_thumb=True, prefer_season=prefer_season)
 
             WINDOW.setProperty("Plexbmc.OnDeckEpisode.%s.Path" % ondeckSeasonCount, title_url)
