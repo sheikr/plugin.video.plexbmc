@@ -3,6 +3,7 @@ import time
 
 plexbmc_start = time.time()
 print "===== PlexBMC START [id: %s] =====" % plexbmc_start
+print " >> PlexBMC Processing request: [%s] =====" % sys.argv
 
 from resources.lib import plexbmc
 plexbmc.start_plexbmc()
