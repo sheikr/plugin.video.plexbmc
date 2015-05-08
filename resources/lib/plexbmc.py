@@ -38,7 +38,8 @@ import xbmcgui
 from .utils import wake_servers, get_link_url
 from .utils import clear_shelf
 
-from .common import AddonSettings, PrintDebug, EnumMode, EnumSubAudioControl, GENERIC_THUMBNAIL, GLOBAL_SETUP
+from .common import AddonSettings, PrintDebug
+from .common import EnumMode, EnumSubAudioControl, GENERIC_THUMBNAIL, GLOBAL_SETUP
 from .plexserver import plex_network, get_master_server
 
 from .commands import COMMANDS, BaseCommand
