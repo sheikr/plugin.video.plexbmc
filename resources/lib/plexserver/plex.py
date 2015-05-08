@@ -21,8 +21,6 @@ class Plex:
     def __init__(self, load=False):
         # Provide an interface into Plex
 
-
-
         self.cache = CacheControl(GLOBAL_SETUP['__cachedir__'] + "cache/servers", settings.get_setting('cache'))
         self.myplex_server = 'https://plex.tv'
         self.myplex_user = None
@@ -395,7 +393,7 @@ class Plex:
         return
 
     def talk_to_myplex(self, path, renew=False, type='get'):
-        printDebug.info("url = %s%s" % (self.myplex_server, path))
+        printDebug.info("type: %s, url: %s%s" % (type, self.myplex_server, path))
         link = False
         try:
             if type == 'get':

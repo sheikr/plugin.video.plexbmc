@@ -422,7 +422,7 @@ class PlexMediaServer:
 
         new_query_args = urllib.urlencode(query_args, True)
 
-        return "%s | %s" % (urlparse.urlunparse(
+        return "%s?%s" % (urlparse.urlunparse(
             (url_parts.scheme, url_parts.netloc, url_parts.path, url_parts.params, new_query_args, url_parts.fragment)),
                             self.plex_identification_string)
 
