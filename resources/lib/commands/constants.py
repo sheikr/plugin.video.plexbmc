@@ -9,6 +9,7 @@ from .command_manage_my_plex import CommandManageMyPlex
 
 from .command_skin import CommandSkin
 from .command_amberskin import CommandAmberSkin
+from .command_shelf import CommandShelf
 
 
 COMMAND_CACHE_REFRESH = "cacherefresh"
@@ -22,6 +23,7 @@ COMMAND_MANAGE_MY_PLEX = "managemyplex"
 
 COMMAND_SKIN = "skin"
 COMMAND_AMBERSKIN = "amberskin"
+COMMAND_SHELF = "shelf"
 
 COMMANDS = {
     COMMAND_CACHE_REFRESH: CommandCacheRefresh,
@@ -34,5 +36,6 @@ COMMANDS = {
     COMMAND_MANAGE_MY_PLEX: CommandManageMyPlex,
 
     COMMAND_SKIN: CommandSkin,
-    COMMAND_AMBERSKIN: CommandAmberSkin
+    COMMAND_AMBERSKIN: CommandAmberSkin,
+    COMMAND_SHELF: CommandShelf
 }

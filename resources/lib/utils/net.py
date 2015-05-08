@@ -62,7 +62,6 @@ def get_link_url(url, pathData, server, season_shelf=False):
     else:
         printDebug.debug("Detected relative link")
         return "%s/%s" % (url, path)
-    return url
 
 
 def wake_servers():

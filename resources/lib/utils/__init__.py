@@ -5,3 +5,4 @@ from .net import is_ip
 from .skin import clear_shelf
 from .skin import clear_skin_sections
 from .skin import clear_on_deck_shelf
+from .skin import get_thumb

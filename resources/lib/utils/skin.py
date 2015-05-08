@@ -1,55 +1,82 @@
+import urllib
 import xbmcgui
-from ..common import AddonSettings, PrintDebug
+from ..common import AddonSettings, PrintDebug, GENERIC_THUMBNAIL
 
 settings = AddonSettings()
 printDebug = PrintDebug("PlexBMC", "utils.skin")
 
 
-def clear_shelf(movieCount=0, seasonCount=0, musicCount=0, photoCount=0):
+def get_thumb(data, server, width=720, height=720):
+    """
+        Simply take a URL or path and determine how to format for images
+        @ input: elementTree element, server name
+        @ return formatted URL
+    """
+
+    if settings.get_setting('skipimages'):
+        return ''
+
+    thumbnail = data.get('thumb', '').split('?t')[0].encode('utf-8')
+
+    if thumbnail.startswith("http"):
+        return thumbnail
+
+    elif thumbnail.startswith('/'):
+        if settings.get_setting('fullres_thumbs'):
+            return server.get_kodi_header_formatted_url(thumbnail)
+        else:
+            return server.get_kodi_header_formatted_url('/photo/:/transcode?url=%s&width=%s&height=%s' %
+                                                        (urllib.quote_plus('http://localhost:32400' + thumbnail),
+                                                         width, height))
+
+    return GENERIC_THUMBNAIL
+
+
+def clear_shelf(movie_count=0, season_count=0, music_count=0, photo_count=0):
     # Clear out old data
-    WINDOW = xbmcgui.Window(10000)
+    window = xbmcgui.Window(10000)
     printDebug.debug("Clearing unused properties")
 
     try:
-        for i in range(movieCount, 50 + 1):
-            WINDOW.clearProperty("Plexbmc.LatestMovie.%s.Path" % i)
-            WINDOW.clearProperty("Plexbmc.LatestMovie.%s.Title" % i)
-            WINDOW.clearProperty("Plexbmc.LatestMovie.%s.Year" % i)
-            WINDOW.clearProperty("Plexbmc.LatestMovie.%s.Rating" % i)
-            WINDOW.clearProperty("Plexbmc.LatestMovie.%s.Duration" % i)
-            WINDOW.clearProperty("Plexbmc.LatestMovie.%s.Thumb" % i)
-            WINDOW.clearProperty("Plexbmc.LatestMovie.%s.uuid" % i)
+        for i in range(movie_count, 50 + 1):
+            window.clearProperty("Plexbmc.LatestMovie.%s.Path" % i)
+            window.clearProperty("Plexbmc.LatestMovie.%s.Title" % i)
+            window.clearProperty("Plexbmc.LatestMovie.%s.Year" % i)
+            window.clearProperty("Plexbmc.LatestMovie.%s.Rating" % i)
+            window.clearProperty("Plexbmc.LatestMovie.%s.Duration" % i)
+            window.clearProperty("Plexbmc.LatestMovie.%s.Thumb" % i)
+            window.clearProperty("Plexbmc.LatestMovie.%s.uuid" % i)
         printDebug.debug("Done clearing movies")
     except:
         pass
 
     try:
-        for i in range(seasonCount, 50 + 1):
-            WINDOW.clearProperty("Plexbmc.LatestEpisode.%s.Path" % i)
-            WINDOW.clearProperty("Plexbmc.LatestEpisode.%s.EpisodeTitle" % i)
-            WINDOW.clearProperty("Plexbmc.LatestEpisode.%s.EpisodeSeason" % i)
-            WINDOW.clearProperty("Plexbmc.LatestEpisode.%s.ShowTitle" % i)
-            WINDOW.clearProperty("Plexbmc.LatestEpisode.%s.Thumb" % i)
-            WINDOW.clearProperty("Plexbmc.LatestEpisode.%s.uuid" % i)
+        for i in range(season_count, 50 + 1):
+            window.clearProperty("Plexbmc.LatestEpisode.%s.Path" % i)
+            window.clearProperty("Plexbmc.LatestEpisode.%s.EpisodeTitle" % i)
+            window.clearProperty("Plexbmc.LatestEpisode.%s.EpisodeSeason" % i)
+            window.clearProperty("Plexbmc.LatestEpisode.%s.ShowTitle" % i)
+            window.clearProperty("Plexbmc.LatestEpisode.%s.Thumb" % i)
+            window.clearProperty("Plexbmc.LatestEpisode.%s.uuid" % i)
         printDebug.debug("Done clearing tv")
     except:
         pass
 
     try:
-        for i in range(musicCount, 25 + 1):
-            WINDOW.clearProperty("Plexbmc.LatestAlbum.%s.Path" % i)
-            WINDOW.clearProperty("Plexbmc.LatestAlbum.%s.Title" % i)
-            WINDOW.clearProperty("Plexbmc.LatestAlbum.%s.Artist" % i)
-            WINDOW.clearProperty("Plexbmc.LatestAlbum.%s.Thumb" % i)
+        for i in range(music_count, 25 + 1):
+            window.clearProperty("Plexbmc.LatestAlbum.%s.Path" % i)
+            window.clearProperty("Plexbmc.LatestAlbum.%s.Title" % i)
+            window.clearProperty("Plexbmc.LatestAlbum.%s.Artist" % i)
+            window.clearProperty("Plexbmc.LatestAlbum.%s.Thumb" % i)
         printDebug.debug("Done clearing music")
     except:
         pass
 
     try:
-        for i in range(photoCount, 25 + 1):
-            WINDOW.clearProperty("Plexbmc.LatestPhoto.%s.Path" % i)
-            WINDOW.clearProperty("Plexbmc.LatestPhoto.%s.Title" % i)
-            WINDOW.clearProperty("Plexbmc.LatestPhoto.%s.Thumb" % i)
+        for i in range(photo_count, 25 + 1):
+            window.clearProperty("Plexbmc.LatestPhoto.%s.Path" % i)
+            window.clearProperty("Plexbmc.LatestPhoto.%s.Title" % i)
+            window.clearProperty("Plexbmc.LatestPhoto.%s.Thumb" % i)
         printDebug.debug("Done clearing photos")
     except:
         pass
