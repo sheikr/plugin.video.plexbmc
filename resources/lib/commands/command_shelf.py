@@ -8,7 +8,7 @@ from ..utils import clear_shelf, get_thumb, get_link_url
 import xbmcgui
 
 settings = AddonSettings()
-printDebug = PrintDebug("PlexBMC", "utils.skin")
+printDebug = PrintDebug("PlexBMC", "CommandShelf")
 
 
 class CommandShelf(BaseCommand):
@@ -18,17 +18,11 @@ class CommandShelf(BaseCommand):
 
     def execute(self):
         plex_network.load()
-
-        try:
-            server_list = self.args[0]
-        except:
-            server_list = None
-
-        _shelf(server_list)
+        _shelf()
         return
 
 
-def _shelf(server_list=None):
+def _shelf():
     #Gather some data and set the window properties
     printDebug.debug("== ENTER ==")
 
@@ -48,8 +42,7 @@ def _shelf(server_list=None):
     direction = True
     full_count = 0
 
-    if server_list is None:
-        server_list = plex_network.get_server_list()
+    server_list = plex_network.get_server_list()
 
     if server_list == {}:
         xbmc.executebuiltin("XBMC.Notification(Unable to see any media servers,)")

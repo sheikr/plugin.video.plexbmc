@@ -2456,98 +2456,6 @@ def channelView( url ):
 
     xbmcplugin.endOfDirectory(pluginhandle,cacheToDisc=settings.get_setting('kodicache'))
 
-def shelfChannel(server_list=None):
-    #Gather some data and set the window properties
-    printDebug.debug("== ENTER ==")
-
-    if not settings.get_setting('channelShelf') or settings.get_setting('homeshelf') == '3':
-        printDebug.debug("Disabling channel shelf")
-        clearChannelShelf()
-        return
-
-    #Get the global host variable set in settings
-    WINDOW = xbmcgui.Window( 10000 )
-
-    channelCount=1
-
-    if server_list is None:
-        server_list=plex_network.get_server_list()
-
-    if not server_list:
-        xbmc.executebuiltin("XBMC.Notification(Unable to see any media servers,)")
-        clearChannelShelf()
-        return
-
-    for server_details in server_list:
-
-        if server_details.is_secondary() or not server_details.is_owned():
-            continue
-
-        if not settings.get_setting('channelShelf') or settings.get_setting('homeshelf') == '3':
-            WINDOW.clearProperty("Plexbmc.LatestChannel.1.Path" )
-            return
-
-        tree=server_details.get_channel_recentlyviewed()
-        if tree is None:
-            xbmc.executebuiltin("XBMC.Notification(Unable to contact server: %s, )" % server_details.get_name())
-            clearChannelShelf(0)
-            return
-
-        #For each of the servers we have identified
-        for media in tree:
-
-            printDebug.debug("Found a recent channel entry")
-            suffix=media.get('key').split('/')[1]
-
-            if suffix == "photos":
-                mode=Mode.PHOTOS
-                channel_window = "Pictures"
-
-            elif suffix == "video":
-                mode=Mode.PLEXPLUGINS
-                channel_window="VideoLibrary"
-
-            elif suffix == "music":
-                mode=Mode.MUSIC
-                channel_window="MusicFiles"
-
-            else:
-                mode=Mode.GETCONTENT
-                channel_window="VideoLibrary"
-
-            c_url="ActivateWindow(%s, plugin://plugin.video.plexbmc?url=%s&mode=%s)" % ( channel_window, get_link_url(server_details.get_url_location(),media,server_details), mode)
-            pms_thumb = str(media.get('thumb', ''))
-
-            if pms_thumb.startswith('/'):
-                c_thumb = server_details.get_kodi_header_formatted_url(pms_thumb)
-
-            else:
-                c_thumb = pms_thumb
-
-            WINDOW.setProperty("Plexbmc.LatestChannel.%s.Path" % channelCount, c_url)
-            WINDOW.setProperty("Plexbmc.LatestChannel.%s.Title" % channelCount, media.get('title', 'Unknown'))
-            WINDOW.setProperty("Plexbmc.LatestChannel.%s.Thumb" % channelCount, c_thumb)
-
-            channelCount += 1
-
-            printDebug.debug("Building Recent window title: %s\n      Building Recent window url: %s\n      Building Recent window thumb: %s" % (media.get('title', 'Unknown'),c_url,c_thumb))
-
-    clearChannelShelf(channelCount)
-    return
-
-def clearChannelShelf (channelCount=0):
-    WINDOW = xbmcgui.Window( 10000 )
-
-    try:
-        for i in range(channelCount, 30+1):
-            WINDOW.clearProperty("Plexbmc.LatestChannel.%s.Path"   % ( i ) )
-            WINDOW.clearProperty("Plexbmc.LatestChannel.%s.Title"  % ( i ) )
-            WINDOW.clearProperty("Plexbmc.LatestChannel.%s.Thumb"  % ( i ) )
-        printDebug.debug("Done clearing channels")
-    except: pass
-
-    return
-
 def myPlexQueue():
     printDebug.debug("== ENTER ==")
 
@@ -2560,160 +2468,6 @@ def myPlexQueue():
     PlexPlugins('http://my.plexapp.com/playlists/queue/all', tree)
     return
 
-def libraryRefresh( server_uuid , section_id):
-    printDebug.debug("== ENTER ==")
-
-    server=plex_network.get_server_from_uuid(server_uuid)
-    server.refresh_section(section_id)
-
-    printDebug.info("Library refresh requested")
-    xbmc.executebuiltin("XBMC.Notification(\"PleXBMC\",Library Refresh started,100)")
-    return
-
-def watched( server_uuid, metadata_id, watched='watch' ):
-    printDebug.debug("== ENTER ==")
-
-    server=plex_network.get_server_from_uuid(server_uuid)
-
-    if watched == 'watch':
-        printDebug.info("Marking %s as watched" % metadata_id)
-        server.mark_item_watched(metadata_id)
-    else:
-        printDebug.info("Marking %s as unwatched" % metadata_id)
-        server.mark_item_unwatched(metadata_id)
-
-    xbmc.executebuiltin("Container.Refresh")
-
-    return
-
-def deleteMedia( server_uuid, metadata_id ):
-    printDebug.debug("== ENTER ==")
-    printDebug.info("Deleting media at: %s" % metadata_id)
-
-    return_value = xbmcgui.Dialog().yesno("Confirm file delete?","Delete this item? This action will delete media and associated data files.")
-
-    if return_value:
-        printDebug.debug("Deleting....")
-        server=plex_network.get_server_from_uuid(server_uuid)
-        server.delete_metadata(metadata_id)
-        xbmc.executebuiltin("Container.Refresh")
-
-    return True
-
-def alterSubs ( server_uuid, metadata_id ):
-    """
-        Display a list of available Subtitle streams and allow a user to select one.
-        The currently selected stream will be annotated with a *
-    """
-    printDebug.debug("== ENTER ==")
-
-    server = plex_network.get_server_from_uuid(server_uuid)
-    tree = server.get_metadata(metadata_id)
-
-    sub_list=['']
-    display_list=["None"]
-    fl_select=False
-    for parts in tree.getiterator('Part'):
-
-        part_id=parts.get('id')
-
-        for streams in parts:
-
-            if streams.get('streamType','') == "3":
-
-                stream_id=streams.get('id')
-                lang=streams.get('languageCode',"Unknown").encode('utf-8')
-                printDebug.debug("Detected Subtitle stream [%s] [%s]" % ( stream_id, lang ) )
-
-                if streams.get('format',streams.get('codec')) == "idx":
-                    printDebug.debug("Stream: %s - Ignoring idx file for now" % stream_id)
-                    continue
-                else:
-                    sub_list.append(stream_id)
-
-                    if streams.get('selected') == '1':
-                        fl_select=True
-                        language=streams.get('language','Unknown')+"*"
-                    else:
-                        language=streams.get('language','Unknown')
-
-                    display_list.append(language)
-        break
-
-    if not fl_select:
-        display_list[0]=display_list[0]+"*"
-
-    subScreen = xbmcgui.Dialog()
-    result = subScreen.select('Select subtitle',display_list)
-    if result == -1:
-        return False
-
-    printDebug.debug("User has selected stream %s" % sub_list[result])
-    server.set_subtitle_stream(part_id,  sub_list[result])
-
-    return True
-
-def alterAudio ( server_uuid, metadata_id ):
-    """
-        Display a list of available audio streams and allow a user to select one.
-        The currently selected stream will be annotated with a *
-    """
-    printDebug.debug("== ENTER ==")
-
-    server = plex_network.get_server_from_uuid(server_uuid)
-    tree = server.get_metadata(metadata_id)
-
-    audio_list=[]
-    display_list=[]
-    for parts in tree.getiterator('Part'):
-
-        part_id=parts.get('id')
-
-        for streams in parts:
-
-            if streams.get('streamType','') == "2":
-
-                stream_id=streams.get('id')
-                audio_list.append(stream_id)
-                lang=streams.get('languageCode', "Unknown")
-
-                printDebug.debug("Detected Audio stream [%s] [%s] " % ( stream_id, lang))
-
-                if streams.get('channels','Unknown') == '6':
-                    channels="5.1"
-                elif streams.get('channels','Unknown') == '7':
-                    channels="6.1"
-                elif streams.get('channels','Unknown') == '2':
-                    channels="Stereo"
-                else:
-                    channels=streams.get('channels','Unknown')
-
-                if streams.get('codec','Unknown') == "ac3":
-                    codec="AC3"
-                elif streams.get('codec','Unknown') == "dca":
-                    codec="DTS"
-                else:
-                    codec=streams.get('codec','Unknown')
-
-                language="%s (%s %s)" % ( streams.get('language','Unknown').encode('utf-8') , codec, channels )
-
-                if streams.get('selected') == '1':
-                    language=language+"*"
-
-                display_list.append(language)
-        break
-
-    audioScreen = xbmcgui.Dialog()
-    result = audioScreen.select('Select audio',display_list)
-    if result == -1:
-        return False
-
-    printDebug.debug("User has selected stream %s" % audio_list[result])
-
-    server.set_audio_stream(part_id, audio_list[result])
-
-    return True
-
 def setWindowHeading(tree) :
     WINDOW = xbmcgui.Window( xbmcgui.getCurrentWindowId() )
     try:
@@ -2724,30 +2478,6 @@ def setWindowHeading(tree) :
         WINDOW.setProperty("heading2", tree.get('title2'))
     except:
         WINDOW.clearProperty("heading2")
-
-def setMasterServer () :
-    printDebug.debug("== ENTER ==")
-
-    servers=get_master_server(True)
-    printDebug.debug(str(servers))
-
-    current_master=settings.get_setting('masterServer')
-
-    displayList=[]
-    for address in servers:
-        found_server = address.get_name()
-        if found_server == current_master:
-            found_server = found_server+"*"
-        displayList.append(found_server)
-
-    audioScreen = xbmcgui.Dialog()
-    result = audioScreen.select('Select master server', displayList)
-    if result == -1:
-        return False
-
-    printDebug.debug("Setting master server to: %s" % servers[result].get_name() )
-    settings.update_master_server(servers[result].get_name() )
-    return
 
 def displayServers( url ):
     printDebug.debug("== ENTER ==")
@@ -2866,72 +2596,29 @@ def start_plexbmc():
     args = sys.argv[2:]
     command = COMMANDS.get(command_name)
     if command and issubclass(command, BaseCommand):
+        printDebug.debug("executing command: %s; with args: %s" % (command, args))
         command(args).execute()
 
-    # Populate channel recently viewed items
-    elif command_name == "channelShelf":
-        plex_network.load()
-        shelfChannel()
-        pass
-
-    # Send a library update to Plex
-    elif command_name == "update":
-        plex_network.load()
-        server_uuid = sys.argv[2]
-        section_id = sys.argv[3]
-        libraryRefresh(server_uuid, section_id)
-
-    # Mark an item as watched/unwatched in plex
-    elif command_name == "watch":
-        plex_network.load()
-        server_uuid = sys.argv[2]
-        metadata_id = sys.argv[3]
-        watch_status = sys.argv[4]
-        watched(server_uuid, metadata_id, watch_status)
-
     # nt currently used
-    elif command_name == "refreshplexbmc":
-        plex_network.load()
-        plex_network.discover()
-        server_list = plex_network.get_server_list()
-        # todo rewrite
-        from commands.command_skin import CommandSkin
-        command = CommandSkin(None, server_list)
-        command.execute()
-        # skin(server_list)
-
-        from commands.command_skin import CommandShelf
-        command = CommandShelf(server_list)
-        command.execute()
-
-        #shelf(server_list)
-        shelfChannel(server_list)
-
-    # delete media from PMS
-    elif command_name == "delete":
-        plex_network.load()
-        server_uuid = sys.argv[2]
-        metadata_id = sys.argv[3]
-        deleteMedia(server_uuid, metadata_id)
-
-    # Display subtitle selection screen
-    elif command_name == "subs":
-        plex_network.load()
-        server_uuid = sys.argv[2]
-        metadata_id = sys.argv[3]
-        alterSubs(server_uuid, metadata_id)
-
-    # Display audio stream selection screen
-    elif command_name == "audio":
-        plex_network.load()
-        server_uuid = sys.argv[2]
-        metadata_id = sys.argv[3]
-        alterAudio(server_uuid, metadata_id)
-
-    # Allow a master server to be selected (for myplex queue)
-    elif command_name == "master":
-        plex_network.load()
-        setMasterServer()
+    # elif command_name == "refreshplexbmc":
+    #     plex_network.load()
+    #     plex_network.discover()
+    #     server_list = plex_network.get_server_list()
+    #     # todo rewrite
+    #     from commands.command_skin import CommandSkin
+    #     command = CommandSkin(None, server_list)
+    #     command.execute()
+    #     # skin(server_list)
+    #
+    #     from commands.command_shelf import CommandShelf
+    #     command = CommandShelf(server_list)
+    #     command.execute()
+    #     #shelf(server_list)
+    #
+    #     from commands.command_channel_shelf import CommandChannelShelf
+    #     command = CommandChannelShelf(server_list)
+    #     command.execute()
+    #     # shelfChannel(server_list)
 
     # else move to the main code
     else:
