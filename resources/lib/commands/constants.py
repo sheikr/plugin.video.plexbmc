@@ -15,6 +15,7 @@ from .command_update import CommandUpdate
 from .command_watch import CommandWatch
 from .command_delete import CommandDelete
 from .command_subs import CommandSubs
+from .command_audio import CommandAudio
 from .command_master import CommandMaster
 
 
@@ -35,6 +36,7 @@ COMMAND_UPDATE = "update"
 COMMAND_WATCH = "watch"
 COMMAND_DELETE = "delete"
 COMMAND_SUBS = "subs"
+COMMAND_AUDIO = "audio"
 COMMAND_MASTER = "master"
 
 COMMANDS = {
@@ -55,5 +57,6 @@ COMMANDS = {
     COMMAND_WATCH: CommandWatch,
     COMMAND_DELETE: CommandDelete,
     COMMAND_SUBS: CommandSubs,
+    COMMAND_AUDIO: CommandAudio,
     COMMAND_MASTER: CommandMaster
 }
