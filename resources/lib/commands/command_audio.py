@@ -9,7 +9,7 @@ printDebug = PrintDebug("PleXBMC", "CommandAudio")
 
 class CommandAudio(BaseCommand):
     def __init__(self, *args):
-        super(CommandAudio, self).__init__(args)
+        super(CommandAudio, self).__init__(*args)
 
     def execute(self):
         plex_network.load()

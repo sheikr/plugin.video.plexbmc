@@ -2597,7 +2597,7 @@ def start_plexbmc():
     command = COMMANDS.get(command_name)
     if command and issubclass(command, BaseCommand):
         printDebug.debug("executing command: %s; with args: %s" % (command, args))
-        command(args).execute()
+        command(*args).execute()
 
     # nt currently used
     # elif command_name == "refreshplexbmc":
