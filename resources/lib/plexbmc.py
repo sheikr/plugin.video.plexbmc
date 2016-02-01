@@ -420,7 +420,8 @@ def enforce_skin_view(mode):
                 '0': 'skin.quartz',
                 '1': 'skin.quartz3',
                 '3': 'skin.amber',
-                '4': 'skin.aeon.nox.5'}
+                '4': 'skin.aeon.nox.5',
+		'5': 'skin.mimic'}
 
     if skin_map[skinname] not in current_skin_name:
         log_print.debug("Do not have the correct skin [%s] selected in settings [%s] - ignoring" % (current_skin_name, skin_map[skinname]))
@@ -511,11 +512,32 @@ def enforce_skin_view(mode):
                       'Wall'      : 503,
                       'BigList'   : 510}
 
+    mimic_views = {'List'      : 50,
+                      'InfoWall'  : 51,
+                      'Landscape' : 52,
+                      'ShowCase1' : 53,
+                      'ShowCase2' : 54,
+                      'TriPanel'  : 55,
+                      'Posters'   : 56,
+                      'Shift'     : 57,
+                      'BannerWall': 58,
+                      'Fanart'    : 59,
+                      'Wall'      : 500,
+                      'LowList'   : 501,
+                      'Episode'   : 502,
+		      'Gallery'   : 504,
+		      'Panel'     : 505,
+		      'BigList'   : 507,
+		      'SongList'  : 508,
+                      'Wall509'   : 509,
+                      'Logo'   : 510}
+
     skin_list = {"0": Quartz_views,
                  "1": QuartzV3_views,
                  "2": Confluence_views,
                  "3": Amber_views,
-                 "4": aeon_nox_views}
+                 "4": aeon_nox_views,
+		 "5": mimic_views}
 
     log_print.debug("Using skin view: %s" % skin_list[skinname][viewname])
 
@@ -530,14 +552,15 @@ def process_movies(url, tree=None):
     log_print.debug("== ENTER ==")
     xbmcplugin.setContent(pluginhandle, 'movies')
 
-    xbmcplugin.addSortMethod(pluginhandle, 37)  # maintain original plex sorted
-    xbmcplugin.addSortMethod(pluginhandle, 25)  # video title ignore THE
-    xbmcplugin.addSortMethod(pluginhandle, 19)  # date added
-    xbmcplugin.addSortMethod(pluginhandle, 3)   # date
-    xbmcplugin.addSortMethod(pluginhandle, 18)  # rating
-    xbmcplugin.addSortMethod(pluginhandle, 17)  # year
-    xbmcplugin.addSortMethod(pluginhandle, 29)  # runtime
-    xbmcplugin.addSortMethod(pluginhandle, 28)  # by MPAA
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_UNSORTED)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE_IGNORE_THE)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_DATEADDED)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_DATE)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_RATING)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_YEAR)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_RUNTIME)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_MPAA_RATING)
+
 
     # get the server name from the URL, which was passed via the on screen listing..
 
@@ -591,13 +614,13 @@ def build_context_menu(url, item_data, server):
 def process_tvshows(url, tree=None):
     log_print.debug("== ENTER ==")
     xbmcplugin.setContent(pluginhandle, 'tvshows')
-    xbmcplugin.addSortMethod(pluginhandle, 37 ) # maintain original plex sorted
-    xbmcplugin.addSortMethod(pluginhandle, 25 ) # video title ignore THE
-    xbmcplugin.addSortMethod(pluginhandle, 3 )  # date
-    xbmcplugin.addSortMethod(pluginhandle, 18 ) # rating
-    xbmcplugin.addSortMethod(pluginhandle, 17 ) # year
-    xbmcplugin.addSortMethod(pluginhandle, 28 ) # by MPAA
-
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_UNSORTED)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE_IGNORE_THE)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_DATE)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_RATING)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_YEAR)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_MPAA_RATING)
+    
     # Get the URL and server name.  Get the XML and parse
     tree = get_xml(url,tree)
     if tree is None:
@@ -628,7 +651,8 @@ def process_tvshows(url, tree=None):
                    'episode'   : int(show.get('leafCount', 0)),
                    'mpaa'      : show.get('contentRating', ''),
                    'aired'     : show.get('originallyAvailableAt', ''),
-                   'genre'     : " / ".join(tempgenre)}
+                   'genre'     : " / ".join(tempgenre),
+                   'mediatype' : "tvshow"}
 
         extraData = {'type'             : 'video',
                      'source'           : 'tvshows',
@@ -717,7 +741,9 @@ def process_tvseasons(url):
                    'season'    : 0,
                    'episode'   : int(season.get('leafCount', 0)),
                    'mpaa'      : season.get('contentRating', ''),
-                   'aired'     : season.get('originallyAvailableAt', '')}
+                   'aired'     : season.get('originallyAvailableAt', ''),
+                   'mediatype' : "season"
+               }
 
         if season.get('sorttitle'): details['sorttitle'] = season.get('sorttitle')
 
@@ -791,18 +817,18 @@ def process_tvepisodes(url, tree=None):
 
     if tree.get('mixedParents') == '1':
         log_print.info('Setting plex sort')
-        xbmcplugin.addSortMethod(pluginhandle, 37 ) # maintain original plex sorted
+        xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_UNSORTED ) # maintain original plex sorted
     else:
         log_print.info('Setting KODI sort')
         xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_EPISODE )  # episode
 
-    xbmcplugin.addSortMethod(pluginhandle, 3 )  # date
-    xbmcplugin.addSortMethod(pluginhandle, 25 ) # video title ignore THE
-    xbmcplugin.addSortMethod(pluginhandle, 19 )  # date added
-    xbmcplugin.addSortMethod(pluginhandle, 18 ) # rating
-    xbmcplugin.addSortMethod(pluginhandle, 17 ) # year
-    xbmcplugin.addSortMethod(pluginhandle, 29 ) # runtime
-    xbmcplugin.addSortMethod(pluginhandle, 28 ) # by MPAA    
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_DATE)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE_IGNORE_THE)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_DATEADDED)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_RATING)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_YEAR)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_RUNTIME)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_MPAA_RATING)
 
     for episode in ShowTags:
 
@@ -842,7 +868,8 @@ def process_tvepisodes(url, tree=None):
                  'episode'     : int(episode.get('index',0)) ,
                  'aired'       : episode.get('originallyAvailableAt','') ,
                  'tvshowtitle' : episode.get('grandparentTitle',tree.get('grandparentTitle','')).encode('utf-8') ,
-                 'season'      : int(episode.get('parentIndex',tree.get('parentIndex',0))) }
+                 'season'      : int(episode.get('parentIndex',tree.get('parentIndex',0))) ,
+                 'mediatype'   : "episode"}
 
         if episode.get('sorttitle'):
             details['sorttitle'] = episode.get('sorttitle').encode('utf-8')
@@ -972,13 +999,15 @@ def get_audio_subtitles_from_media(server, tree, full=False):
                         'mpaa'      : timings.get('contentRating', '').encode('utf-8'),
                         'year'      : int(timings.get('year',0)) ,
                         'tagline'   : timings.get('tagline','') ,
-                        'thumbnailImage': get_thumb_image(timings,server) }
+                        'thumbnailImage': get_thumb_image(timings,server),
+                        'mediatype' : "video"}
 
             if timings.get('type') == "episode":
                 full_data['episode']     = int(timings.get('index',0)) 
                 full_data['aired']       = timings.get('originallyAvailableAt','') 
                 full_data['tvshowtitle'] = timings.get('grandparentTitle',tree.get('grandparentTitle','')).encode('utf-8') 
                 full_data['season']      = int(timings.get('parentIndex',tree.get('parentIndex',0))) 
+                full_data['mediatype']   = "episode"
 
         elif media_type == "music":
 
@@ -1720,10 +1749,11 @@ def artist(url, tree=None):
     '''
     log_print.debug("== ENTER ==")
     xbmcplugin.setContent(pluginhandle, 'artists')
-    xbmcplugin.addSortMethod(pluginhandle, 37 ) # maintain original plex sorted
-    xbmcplugin.addSortMethod(pluginhandle, 12 ) # artist title ignore THE
-    xbmcplugin.addSortMethod(pluginhandle, 34 ) # last played
-    xbmcplugin.addSortMethod(pluginhandle, 17 ) # year
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_UNSORTED)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_ARTIST_IGNORE_THE)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_LASTPLAYED)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_YEAR)
+    
 
     # Get the URL and server name.  Get the XML and parse
     tree=get_xml(url,tree)
@@ -1762,11 +1792,11 @@ def artist(url, tree=None):
 def albums(url, tree=None):
     log_print.debug("== ENTER ==")
     xbmcplugin.setContent(pluginhandle, 'albums')
-    xbmcplugin.addSortMethod(pluginhandle, 37 ) # maintain original plex sorted
-    xbmcplugin.addSortMethod(pluginhandle, 24 ) # album title ignore THE
-    xbmcplugin.addSortMethod(pluginhandle, 12 )  # artist ignore THE
-    xbmcplugin.addSortMethod(pluginhandle, 34 ) # last played
-    xbmcplugin.addSortMethod(pluginhandle, 17 ) # year
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_UNSORTED)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_ALBUM_IGNORE_THE)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_ARTIST_IGNORE_THE)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_LASTPLAYED)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_VIDEO_YEAR)
 
     # Get the URL and server name.  Get the XML and parse
     tree=get_xml(url,tree)
@@ -1814,11 +1844,11 @@ def albums(url, tree=None):
 def tracks(url, tree=None):
     log_print.debug("== ENTER ==")
     xbmcplugin.setContent(pluginhandle, 'songs')
-    xbmcplugin.addSortMethod(pluginhandle, 37 ) # maintain original plex sorted
-    xbmcplugin.addSortMethod(pluginhandle, 10 ) # title title ignore THE
-    xbmcplugin.addSortMethod(pluginhandle, 8 ) # duration
-    xbmcplugin.addSortMethod(pluginhandle, 27 ) # song rating
-    xbmcplugin.addSortMethod(pluginhandle, 7 ) # track number
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_UNSORTED)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_DURATION)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_SONG_RATING)
+    xbmcplugin.addSortMethod(pluginhandle, xbmcplugin.SORT_METHOD_TRACKNUM)
 
     tree=get_xml(url,tree)
     if tree is None:
@@ -2112,7 +2142,8 @@ def movie_tag(url, server, tree, movie, random_number):
                'date'     : movie.get('originallyAvailableAt', '1970-01-01'),
                'premiered': movie.get('originallyAvailableAt', '1970-01-01'),
                'tagline'  : movie.get('tagline', ''),
-               'dateAdded': str(datetime.datetime.fromtimestamp(int(movie.get('addedAt', 0))))}
+               'dateAdded': str(datetime.datetime.fromtimestamp(int(movie.get('addedAt', 0)))),
+               'mediatype' : "movie"}
 
     # Extra data required to manage other properties
     extraData={'type'        : "Video",
