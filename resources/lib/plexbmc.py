@@ -420,7 +420,8 @@ def enforce_skin_view(mode):
                 '0': 'skin.quartz',
                 '1': 'skin.quartz3',
                 '3': 'skin.amber',
-                '4': 'skin.aeon.nox.5'}
+                '4': 'skin.aeon.nox.5',
+		'5': 'skin.mimic'}
 
     if skin_map[skinname] not in current_skin_name:
         log_print.debug("Do not have the correct skin [%s] selected in settings [%s] - ignoring" % (current_skin_name, skin_map[skinname]))
@@ -511,11 +512,32 @@ def enforce_skin_view(mode):
                       'Wall'      : 503,
                       'BigList'   : 510}
 
+    mimic_views = {'List'      : 50,
+                      'InfoWall'  : 51,
+                      'Landscape' : 52,
+                      'ShowCase1' : 53,
+                      'ShowCase2' : 54,
+                      'TriPanel'  : 55,
+                      'Posters'   : 56,
+                      'Shift'     : 57,
+                      'BannerWall': 58,
+                      'Fanart'    : 59,
+                      'Wall'      : 500,
+                      'LowList'   : 501,
+                      'Episode'   : 502,
+		      'Gallery'   : 504,
+		      'Panel'     : 505,
+		      'BigList'   : 507,
+		      'SongList'  : 508,
+                      'Wall509'   : 509,
+                      'Logo'   : 510}
+
     skin_list = {"0": Quartz_views,
                  "1": QuartzV3_views,
                  "2": Confluence_views,
                  "3": Amber_views,
-                 "4": aeon_nox_views}
+                 "4": aeon_nox_views,
+		 "5": mimic_views}
 
     log_print.debug("Using skin view: %s" % skin_list[skinname][viewname])
 
